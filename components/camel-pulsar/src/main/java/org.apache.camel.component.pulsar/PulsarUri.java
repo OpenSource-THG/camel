@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 public class PulsarUri {
 
-    private static final String REGEX = "^pulsar://(?<type>.+)/(?<tenant>.+)/(?<namespace>.+)/(?<topic>.+)$";
+    private static final String REGEX = "^pulsar:(?<type>.+)/(?<tenant>.+)/(?<namespace>.+)/(?<topic>.+)$";
     private static final Pattern pattern = Pattern.compile(REGEX);
     private static final String TYPE = "type";
     private static final String TENANT = "tenant";
