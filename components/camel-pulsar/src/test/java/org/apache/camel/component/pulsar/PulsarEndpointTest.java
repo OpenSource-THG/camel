@@ -12,13 +12,13 @@ public class PulsarEndpointTest {
     public void givenPulsarClientIsNull_throwIllegalArgumentExceptionOnCreation() {
         PulsarEndpointConfiguration configuration = mock(PulsarEndpointConfiguration.class);
 
-        PulsarEndpoint.create(configuration, null);
+        PulsarEndpoint.create(configuration, null, null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void givenPulsarEndpointConfigurationIsNull_throwIllegalArgumentExceptionOnCreation() {
         PulsarClient pulsarClient = mock(PulsarClient.class);
 
-        PulsarEndpoint.create(null, pulsarClient);
+        PulsarEndpoint.create(null, pulsarClient, null, null);
     }
 }
