@@ -1,9 +1,7 @@
 package org.apache.camel.component.pulsar;
 
+import org.junit.Assert;
 import org.junit.Test;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 public class PulsarUriTest {
 
@@ -40,20 +38,20 @@ public class PulsarUriTest {
     @Test
     public void persistentTopicType() {
         PulsarUri uri = new PulsarUri("pulsar://persistent/tenant/namespace/topic");
-        assertThat(uri.getType(), is("persistent"));
+        Assert.assertEquals("persistent", uri.getType());
     }
 
     @Test
     public void nonPersistentTopicType() {
         PulsarUri uri = new PulsarUri("pulsar://non-persistent/tenant/namespace/topic");
-        assertThat(uri.getType(), is("non-persistent"));
+        Assert.assertEquals("non-persistent", uri.getType());
     }
 
     @Test
     public void fullUri() {
         PulsarUri uri = new PulsarUri("pulsar://persistent/tenant/namespace/topic");
-        assertThat(uri.getTenant(), is("tenant"));
-        assertThat(uri.getNamespace(), is("namespace"));
-        assertThat(uri.getTopic(), is("topic"));
+        Assert.assertEquals("tentant", uri.getTenant());
+        Assert.assertEquals("namespace", uri.getNamespace());
+        Assert.assertEquals("topic", uri.getTopic());
     }
 }
