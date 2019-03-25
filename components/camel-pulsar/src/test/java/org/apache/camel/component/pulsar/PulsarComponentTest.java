@@ -1,7 +1,7 @@
 package org.apache.camel.component.pulsar;
 
 import org.apache.camel.component.pulsar.configuration.PulsarEndpointConfiguration;
-import org.apache.camel.component.pulsar.utils.AutoConfiguration;
+import org.apache.camel.component.pulsar.utils.autoconfiguration.AutoConfiguration;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.junit.Test;
 import org.junit.runner.RunWith;

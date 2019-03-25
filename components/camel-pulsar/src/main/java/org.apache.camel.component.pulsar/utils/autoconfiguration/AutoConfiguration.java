@@ -1,4 +1,4 @@
-package org.apache.camel.component.pulsar.utils;
+package org.apache.camel.component.pulsar.utils.autoconfiguration;
 
 import org.apache.camel.component.pulsar.configuration.AdminConfiguration;
 import org.apache.pulsar.client.admin.PulsarAdmin;
@@ -9,12 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class AutoConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(AutoConfiguration.class);
-    private static final Pattern pattern = Pattern.compile("^(?<namespace>(?<tenant>.+)/.+)/.+$");
 
 
     private PulsarAdmin pulsarAdmin;
@@ -28,10 +25,10 @@ public class AutoConfiguration {
 
     public void ensureNameSpaceAndTenant(String path) {
         if(pulsarAdmin != null && adminConfiguration != null && adminConfiguration.isAutoCreateAllowed()) {
-            Matcher matcher = pattern.matcher(path);
-            if (matcher.matches()) {
-                String tenant = matcher.group("tenant");
-                String namespace = matcher.group("namespace");
+            PulsarPath pulsarPath = new PulsarPath(path);
+            if (pulsarPath.isAutoConfigurable()) {
+                String tenant = pulsarPath.getTenant();
+                String namespace = pulsarPath.getNamespace();
                 try {
                     ensureTenant(tenant);
                     ensureNameSpace(tenant, namespace);

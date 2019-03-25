@@ -3,7 +3,7 @@ package org.apache.camel.component.pulsar;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.component.pulsar.configuration.PulsarEndpointConfiguration;
-import org.apache.camel.component.pulsar.utils.AutoConfiguration;
+import org.apache.camel.component.pulsar.utils.autoconfiguration.AutoConfiguration;
 import org.apache.camel.impl.DefaultComponent;
 
 import java.util.Map;

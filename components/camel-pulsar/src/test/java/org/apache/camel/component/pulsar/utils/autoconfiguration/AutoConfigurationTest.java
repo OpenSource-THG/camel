@@ -1,4 +1,4 @@
-package org.apache.camel.component.pulsar.utils;
+package org.apache.camel.component.pulsar.utils.autoconfiguration;
 
 import org.apache.camel.component.pulsar.configuration.AdminConfiguration;
 import org.apache.pulsar.client.admin.Namespaces;

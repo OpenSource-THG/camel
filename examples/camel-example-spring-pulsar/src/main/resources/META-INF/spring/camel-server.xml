@@ -65,7 +65,7 @@
     <constructor-arg ref="pulsarAdminHost"/>
     <constructor-arg ref="pulsarAdminConfig"/>
   </bean>
-  <bean id="autoconfig" class="org.apache.camel.component.pulsar.utils.AutoConfiguration">
+  <bean id="autoconfig" class="org.apache.camel.component.pulsar.utils.autoconfiguration.AutoConfiguration">
     <constructor-arg ref="pulsarAdminClient"/>
   </bean>
   <bean id="pulsar" class="org.apache.camel.component.pulsar.PulsarComponent">
