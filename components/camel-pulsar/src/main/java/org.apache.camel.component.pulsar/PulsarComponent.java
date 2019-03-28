@@ -41,10 +41,12 @@ public class PulsarComponent extends DefaultComponent {
         final PulsarEndpointConfiguration configuration = new PulsarEndpointConfiguration();
 
         setProperties(configuration, parameters);
-        setProperties(autoConfiguration, parameters);
+        if (autoConfiguration != null) {
+            setProperties(autoConfiguration, parameters);
 
-        if (autoConfiguration != null && autoConfiguration.isAutoConfigurable()) {
-            autoConfiguration.ensureNameSpaceAndTenant(path);
+            if (autoConfiguration.isAutoConfigurable()) {
+                autoConfiguration.ensureNameSpaceAndTenant(path);
+            }
         }
 
         return PulsarEndpoint.create(uri, path, configuration, this, pulsarClient);

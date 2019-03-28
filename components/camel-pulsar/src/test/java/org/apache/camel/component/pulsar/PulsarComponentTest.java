@@ -46,9 +46,7 @@ public class PulsarComponentTest extends CamelTestSupport {
 
     @Test
     public void testPulsarEndpointDefaultConfiguration() throws Exception {
-        PulsarEndpointConfiguration configuration = new PulsarEndpointConfiguration();
-        configuration.setPulsarBrokerUrl("pulsar://localhost:6650");
-        PulsarComponent component = new PulsarComponent(context);
+        PulsarComponent component = new PulsarComponent(context, null, null);
 
         PulsarEndpoint endpoint = (PulsarEndpoint) component.createEndpoint("pulsar://persistent/omega-pl/fulfilment/BatchCreated");
 
@@ -56,9 +54,8 @@ public class PulsarComponentTest extends CamelTestSupport {
         assertEquals("sole-consumer", endpoint.getConfiguration().getConsumerName());
         assertEquals("cons", endpoint.getConfiguration().getConsumerNamePrefix());
         assertEquals(10, endpoint.getConfiguration().getConsumerQueueSize());
-        assertEquals(10, endpoint.getConfiguration().getNumberOfConsumers());
+        assertEquals(1, endpoint.getConfiguration().getNumberOfConsumers());
         assertEquals("default-producer", endpoint.getConfiguration().getProducerName());
-        assertNull(endpoint.getConfiguration().getPulsarBrokerUrl());
         assertEquals("subs", endpoint.getConfiguration().getSubscriptionName());
         assertEquals(SubscriptionType.EXCLUSIVE, endpoint.getConfiguration().getSubscriptionType());
     }
