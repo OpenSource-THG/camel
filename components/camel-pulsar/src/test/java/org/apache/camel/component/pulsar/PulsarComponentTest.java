@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.pulsar;
 
-import org.apache.camel.component.pulsar.configuration.PulsarEndpointConfiguration;
 import org.apache.camel.component.pulsar.utils.AutoConfiguration;
 import org.apache.camel.component.pulsar.utils.consumers.SubscriptionType;
 import org.apache.camel.test.junit4.CamelTestSupport;
@@ -24,8 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class PulsarComponentTest extends CamelTestSupport {
 
@@ -39,9 +37,7 @@ public class PulsarComponentTest extends CamelTestSupport {
 
     @Test
     public void testPulsarEndpointConfiguration() throws Exception {
-        PulsarEndpointConfiguration configuration = new PulsarEndpointConfiguration();
-        configuration.setPulsarBrokerUrl("pulsar://localhost:6650");
-        PulsarComponent component = new PulsarComponent(context);
+        PulsarComponent component = new PulsarComponent(context, autoConfiguration, null);
 
         PulsarEndpoint endpoint = (PulsarEndpoint) component.createEndpoint("pulsar://persistent/omega-pl/fulfilment/BatchCreated?numberOfConsumers=10&subscriptionName=batch-created-subscription&subscriptionType=Shared");
 
@@ -69,11 +65,10 @@ public class PulsarComponentTest extends CamelTestSupport {
 
     @Test
     public void testProducerAutoConfigures() throws Exception {
-        PulsarEndpointConfiguration configuration = new PulsarEndpointConfiguration();
-        configuration.setPulsarBrokerUrl("pulsar://localhost:6650");
-        PulsarComponent component = new PulsarComponent(context);
+        when(autoConfiguration.isAutoConfigurable()).thenReturn(true);
+        PulsarComponent component = new PulsarComponent(context, autoConfiguration, null);
 
-        PulsarEndpoint endpoint = (PulsarEndpoint) component.createEndpoint("pulsar://persistent/omega-pl/fulfilment/BatchCreated?numberOfConsumers=10&subscriptionName=batch-created-subscription&subscriptionType=Shared");
+        component.createEndpoint("pulsar://persistent/omega-pl/fulfilment/BatchCreated?numberOfConsumers=10&subscriptionName=batch-created-subscription&subscriptionType=Shared");
 
         verify(autoConfiguration).ensureNameSpaceAndTenant(Matchers.anyString());
     }

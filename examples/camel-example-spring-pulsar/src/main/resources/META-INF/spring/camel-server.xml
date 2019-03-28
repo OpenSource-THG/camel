@@ -21,25 +21,21 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:camel="http://camel.apache.org/schema/spring"
-       xmlns:broker="http://activemq.apache.org/schema/core"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="
          http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
          http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
          http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
-         http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
-  <!-- END SNIPPET: e1 -->
+         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-  <!-- START SNIPPET: e2 -->
   <!-- let Spring do its IoC stuff in this package -->
   <context:component-scan base-package="org.apache.camel.example.server"/>
-  <!-- END SNIPPET: e2 -->
 
   <!-- spring property placeholder, ignore resource not found as the file resource is for unit testing -->
   <context:property-placeholder location="classpath:camel.properties,file:target/custom.properties"
                                 ignore-resource-not-found="true"/>
 
   <bean id="myOrderTypeConverters" class="org.apache.camel.example.pulsar.server.TypeConverters"/>
-  <!-- START SNIPPET: e3 -->
   <!-- declare a camel context that scans for classes that is RouteBuilder
        in the package org.apache.camel.example.server -->
   <camel:camelContext id="camel-server">
@@ -51,24 +47,34 @@
 
   <bean id="multiplier" class="org.apache.camel.example.pulsar.server.Treble"/>
 
-  <bean id="pulsarconfig" class="org.apache.camel.component.pulsar.configuration.PulsarEndpointConfiguration" >
-    <property name="producerName" value="prod-server"/>
-    <property name="subscriptionType" value="EXCLUSIVE"/>
-    <property name="pulsarBrokerUrl" value="pulsar://localhost:6650"/>
-  </bean>
+  <!-- Configure the Pulsar component -->
+  <util:set id="clusters" value-type="java.lang.String">
+    <value>standalone</value>
+  </util:set>
   <bean id="pulsarAdminHost" class="java.lang.String"><constructor-arg value="http://localhost:8080"/></bean>
-  <bean id="pulsarAdminConfig" class="org.apache.camel.component.pulsar.configuration.AdminConfiguration">
-    <property name="autoCreateAllowed" value="true"/>
+
+  <bean id="pulsarAdminConfig" class="org.apache.pulsar.client.impl.conf.ClientConfigurationData">
     <property name="serviceUrl" ref="pulsarAdminHost"/>
-    <property name="clusters" value="standalone/"/>
   </bean>
   <bean id="pulsarAdmin" class="org.apache.pulsar.client.admin.PulsarAdmin">
     <constructor-arg ref="pulsarAdminHost"/>
     <constructor-arg ref="pulsarAdminConfig"/>
   </bean>
+  <bean id="autoconfig" class="org.apache.camel.component.pulsar.utils.AutoConfiguration">
+    <constructor-arg ref="pulsarAdmin"/>
+    <constructor-arg ref="clusters"/>
+  </bean>
+  <bean id="pulsarClientConfig" class="org.apache.pulsar.client.impl.conf.ClientConfigurationData">
+    <property name="serviceUrl" value="pulsar://localhost:6650"/>
+  </bean>
+  <bean id="pulsarClientBuilder" class="org.apache.pulsar.client.impl.ClientBuilderImpl">
+    <constructor-arg ref="pulsarClientConfig"/>
+  </bean>
+  <bean id="pulsarClient" factory-bean="pulsarClientBuilder" factory-method="build"/>
   <bean id="pulsar" class="org.apache.camel.component.pulsar.PulsarComponent">
     <constructor-arg ref="camel-server"/>
+    <constructor-arg ref="autoconfig"/>
+    <constructor-arg ref="pulsarClient"/>
   </bean>
-  <!-- END SNIPPET: e5 -->
 
 </beans>

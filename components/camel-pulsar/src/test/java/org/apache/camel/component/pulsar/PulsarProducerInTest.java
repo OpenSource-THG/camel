@@ -22,19 +22,21 @@ import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.component.pulsar.utils.AutoConfiguration;
 import org.apache.camel.impl.JndiRegistry;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.impl.ClientBuilderImpl;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+@Ignore //TODO use TestContainers to spin up local pulsar broker
 public class PulsarProducerInTest extends CamelTestSupport {
 
     private static final String PULSAR_CLUSTER_URL = "pulsar://localhost:6650";
-    private static final String PULSAR_CLIENT_BEAN_NAME = "pulsarClient";
 
     private static final String TOPIC_URI = "persistent://public/default/camel-producer-topic";
     private static final String PRODUCER = "camel-producer";
@@ -47,7 +49,6 @@ public class PulsarProducerInTest extends CamelTestSupport {
         + "&subscriptionName=camel-subscription&consumerQueueSize=1"
         + "&consumerName=camel-consumer"
         + "&producerName=" + PRODUCER
-        + "&pulsarClient=#" + PULSAR_CLIENT_BEAN_NAME
     )
     private Endpoint from;
 
@@ -77,9 +78,10 @@ public class PulsarProducerInTest extends CamelTestSupport {
 
     private void registerPulsarBeans(final JndiRegistry jndi) throws PulsarClientException {
         PulsarClient pulsarClient = givenPulsarClient();
+        AutoConfiguration autoConfiguration = new AutoConfiguration(null, null);
 
         jndi.bind("pulsarClient", pulsarClient);
-        jndi.bind("pulsar", new PulsarComponent(context()));
+        jndi.bind("pulsar", new PulsarComponent(context(), autoConfiguration, pulsarClient));
     }
 
     private PulsarClient givenPulsarClient() throws PulsarClientException {

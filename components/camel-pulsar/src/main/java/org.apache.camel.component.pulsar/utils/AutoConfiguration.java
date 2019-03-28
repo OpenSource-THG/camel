@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.pulsar.utils;
 
-import org.apache.camel.spi.UriParam;
-import org.apache.camel.spi.UriParams;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.admin.Tenants;
@@ -25,28 +23,23 @@ import org.apache.pulsar.common.policies.data.TenantInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 /**
  * What is the purpose of this? Needs documentation here
  */
-@UriParams
 public class AutoConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AutoConfiguration.class);
 
-    @UriParam(label = "admin", description = "The Pulsar Admin client Bean")
-    private PulsarAdmin pulsarAdmin;
-    private Set<String> clusters = Collections.singleton("standalone");
+    private final PulsarAdmin pulsarAdmin;
+    private final Set<String> clusters;
 
     public AutoConfiguration(PulsarAdmin pulsarAdmin, Set<String> clusters) {
-        setPulsarAdmin(pulsarAdmin);
+        this.pulsarAdmin = pulsarAdmin;
         this.clusters = clusters;
     }
-
-    public AutoConfiguration() {}
 
     public void ensureNameSpaceAndTenant(String path) {
         if(pulsarAdmin != null) {
@@ -81,11 +74,7 @@ public class AutoConfiguration {
         }
     }
 
-    public PulsarAdmin getPulsarAdmin() {
-        return pulsarAdmin;
-    }
-
-    public void setPulsarAdmin(PulsarAdmin pulsarAdmin) {
-        this.pulsarAdmin = pulsarAdmin;
+    public boolean isAutoConfigurable() {
+        return pulsarAdmin != null;
     }
 }
