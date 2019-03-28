@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.pulsar.utils;
 
-import org.apache.camel.component.pulsar.configuration.AdminConfiguration;
 import org.apache.pulsar.client.admin.Namespaces;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminException;
@@ -33,7 +32,6 @@ import static org.mockito.Mockito.*;
 
 public class AutoConfigurationTest {
 
-    private AdminConfiguration adminConfiguration;
     private PulsarAdmin pulsarAdmin;
     private Tenants tenants;
     private Namespaces namespaces;
@@ -41,12 +39,10 @@ public class AutoConfigurationTest {
 
     @Before
     public void setUp() {
-        adminConfiguration = mock(AdminConfiguration.class);
         pulsarAdmin = mock(PulsarAdmin.class);
         tenants = mock(Tenants.class);
         namespaces = mock(Namespaces.class);
 
-        when(adminConfiguration.getClusters()).thenReturn(Collections.singleton("standalone"));
         when(pulsarAdmin.tenants()).thenReturn(tenants);
         when(pulsarAdmin.namespaces()).thenReturn(namespaces);
     }
@@ -63,10 +59,8 @@ public class AutoConfigurationTest {
 
     @Test
     public void autoConfigurationDisabled() {
-        when(pulsarAdmin.getClientConfigData()).thenReturn(adminConfiguration);
-        when(adminConfiguration.isAutoCreateAllowed()).thenReturn(false);
 
-        AutoConfiguration autoConfiguration = new AutoConfiguration(pulsarAdmin, clusters);
+        AutoConfiguration autoConfiguration = new AutoConfiguration(null, clusters);
         autoConfiguration.ensureNameSpaceAndTenant("tn1/ns1/topic");
 
         verify(pulsarAdmin, never()).tenants();
@@ -74,8 +68,6 @@ public class AutoConfigurationTest {
 
     @Test
     public void defaultTopic() {
-        when(pulsarAdmin.getClientConfigData()).thenReturn(adminConfiguration);
-        when(adminConfiguration.isAutoCreateAllowed()).thenReturn(true);
 
         AutoConfiguration autoConfiguration = new AutoConfiguration(pulsarAdmin, clusters);
         autoConfiguration.ensureNameSpaceAndTenant("topic");
@@ -85,8 +77,6 @@ public class AutoConfigurationTest {
 
     @Test
     public void newTenantAndNamespace() throws PulsarAdminException {
-        when(pulsarAdmin.getClientConfigData()).thenReturn(adminConfiguration);
-        when(adminConfiguration.isAutoCreateAllowed()).thenReturn(true);
         when(pulsarAdmin.tenants()).thenReturn(tenants);
         when(tenants.getTenants()).thenReturn(Collections.<String>emptyList());
         when(pulsarAdmin.namespaces()).thenReturn(namespaces);
@@ -101,8 +91,6 @@ public class AutoConfigurationTest {
 
     @Test
     public void existingTenantAndNamespace() throws PulsarAdminException {
-        when(pulsarAdmin.getClientConfigData()).thenReturn(adminConfiguration);
-        when(adminConfiguration.isAutoCreateAllowed()).thenReturn(true);
         when(pulsarAdmin.tenants()).thenReturn(tenants);
         when(tenants.getTenants()).thenReturn(Collections.<String>singletonList("tn1"));
         when(pulsarAdmin.namespaces()).thenReturn(namespaces);

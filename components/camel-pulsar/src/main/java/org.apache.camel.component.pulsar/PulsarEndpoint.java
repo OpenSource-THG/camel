@@ -23,7 +23,6 @@ import org.apache.camel.Producer;
 import org.apache.camel.component.pulsar.configuration.PulsarEndpointConfiguration;
 import org.apache.camel.impl.DefaultEndpoint;
 import org.apache.camel.spi.UriEndpoint;
-import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
@@ -31,30 +30,28 @@ import org.apache.pulsar.client.api.PulsarClientException;
 @UriEndpoint(scheme = "pulsar", title = "Apache Pulsar", syntax = "pulsar:[persistent|non-persistent]://tenant/namespace/topic", label = "messaging")
 public class PulsarEndpoint extends DefaultEndpoint {
 
-    @UriParam
     private final PulsarEndpointConfiguration pulsarEndpointConfiguration;
-    @UriParam
     private final PulsarClient pulsarClient;
     @UriPath(label = "consumer,producer", description = "The Topic's full URI path including type, tenant and namespace")
     private final String topic;
 
-    private PulsarEndpoint(String uri, String path, PulsarEndpointConfiguration pulsarEndpointConfiguration, PulsarComponent component) throws PulsarClientException {
+    private PulsarEndpoint(String uri, String path, PulsarEndpointConfiguration pulsarEndpointConfiguration, PulsarComponent component, PulsarClient pulsarClient) throws PulsarClientException {
         super(uri, component);
         this.topic = path;
         this.pulsarEndpointConfiguration = pulsarEndpointConfiguration;
-        this.pulsarClient = pulsarEndpointConfiguration.getPulsarClient();
+        this.pulsarClient = pulsarClient;
     }
 
     public static PulsarEndpoint create(final String uri,
                                         final String path,
                                         final PulsarEndpointConfiguration pulsarEndpointConfiguration,
-                                        final PulsarComponent component) throws PulsarClientException, IllegalArgumentException {
+                                        final PulsarComponent component, PulsarClient pulsarClient) throws PulsarClientException, IllegalArgumentException {
 
         if(null == pulsarEndpointConfiguration) {
             throw new IllegalArgumentException("PulsarEndpointConfiguration cannot be null");
         }
 
-        return new PulsarEndpoint(uri, path, pulsarEndpointConfiguration, component);
+        return new PulsarEndpoint(uri, path, pulsarEndpointConfiguration, component, pulsarClient);
     }
 
     @Override

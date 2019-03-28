@@ -21,29 +21,32 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.component.pulsar.configuration.PulsarEndpointConfiguration;
 import org.apache.camel.component.pulsar.utils.AutoConfiguration;
 import org.apache.camel.impl.DefaultComponent;
+import org.apache.pulsar.client.api.PulsarClient;
 
 import java.util.Map;
 
 public class PulsarComponent extends DefaultComponent {
 
-    public PulsarComponent() { }
+    private final AutoConfiguration autoConfiguration;
+    private final PulsarClient pulsarClient;
 
-    PulsarComponent(CamelContext context) {
+    PulsarComponent(CamelContext context, AutoConfiguration autoConfiguration, PulsarClient pulsarClient) {
         super(context);
+        this.autoConfiguration = autoConfiguration;
+        this.pulsarClient = pulsarClient;
     }
 
     @Override
     protected Endpoint createEndpoint(final String uri, final String path, final Map<String, Object> parameters) throws Exception {
         final PulsarEndpointConfiguration configuration = new PulsarEndpointConfiguration();
-        final AutoConfiguration autoConfiguration = new AutoConfiguration();
 
         setProperties(configuration, parameters);
         setProperties(autoConfiguration, parameters);
 
-        if (autoConfiguration.getPulsarAdmin() != null) {
+        if (autoConfiguration != null && autoConfiguration.isAutoConfigurable()) {
             autoConfiguration.ensureNameSpaceAndTenant(path);
         }
 
-        return PulsarEndpoint.create(uri, path, configuration, this);
+        return PulsarEndpoint.create(uri, path, configuration, this, pulsarClient);
     }
 }

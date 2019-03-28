@@ -45,7 +45,7 @@ public final class CamelClient {
         ProducerTemplate camelTemplate = context.getBean("camelTemplate", ProducerTemplate.class);
 
         System.out.println("Invoking the multiply with 22");
-        camelTemplate.sendBody("pulsar:non-persistent://tn1/ns1/cameltest?pulsarAdmin=#pulsarAdmin&producerName=clientProd", ExchangePattern.InOnly, 22);
+        camelTemplate.sendBody("pulsar:non-persistent://tn1/ns1/cameltest?producerName=clientProd", ExchangePattern.InOnly, 22);
 
         // we're done so let's properly close the application context
         IOHelper.close(context);

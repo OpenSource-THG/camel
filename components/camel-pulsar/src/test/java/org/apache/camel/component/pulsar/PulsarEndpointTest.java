@@ -23,6 +23,6 @@ public class PulsarEndpointTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void givenPulsarEndpointConfigurationIsNull_throwIllegalArgumentExceptionOnCreation() throws PulsarClientException {
-        PulsarEndpoint.create("", "", null, null);
+        PulsarEndpoint.create("", "", null, null, null);
     }
 }

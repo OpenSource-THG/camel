@@ -19,9 +19,6 @@ package org.apache.camel.component.pulsar.configuration;
 import org.apache.camel.component.pulsar.utils.consumers.SubscriptionType;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
-import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
-import org.apache.pulsar.client.impl.ClientBuilderImpl;
 
 import static org.apache.camel.component.pulsar.utils.consumers.SubscriptionType.EXCLUSIVE;
 
@@ -42,10 +39,6 @@ public class PulsarEndpointConfiguration {
     private String producerName = "default-producer";
     @UriParam(label = "consumer", description = "Prefix to add to consumer names when a SHARED or FAILOVER subscription is used", defaultValue = "cons")
     private String consumerNamePrefix = "cons";
-    @UriParam(label = "consumer, producer", description = "The pulsar client")
-    private PulsarClient pulsarClient;
-    @UriParam(label = "consumer, producer", description = "Url for the Pulsar Broker")
-    private String pulsarBrokerUrl;
 
     public String getSubscriptionName() {
         return subscriptionName;
@@ -101,24 +94,5 @@ public class PulsarEndpointConfiguration {
 
     public void setConsumerNamePrefix(String consumerNamePrefix) {
         this.consumerNamePrefix = consumerNamePrefix;
-    }
-
-    public PulsarClient getPulsarClient() throws PulsarClientException {
-        if (pulsarClient == null) {
-            pulsarClient = new ClientBuilderImpl().serviceUrl("pulsar://localhost:6650").build();
-        }
-        return pulsarClient;
-    }
-
-    public void setPulsarClient(PulsarClient pulsarClient) {
-        this.pulsarClient = pulsarClient;
-    }
-
-    public String getPulsarBrokerUrl() {
-        return pulsarBrokerUrl;
-    }
-
-    public void setPulsarBrokerUrl(String pulsarBrokerUrl) {
-        this.pulsarBrokerUrl = pulsarBrokerUrl;
     }
 }
