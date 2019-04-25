@@ -68,7 +68,7 @@ public class PulsarEndpoint extends DefaultEndpoint {
 
     @Override
     public boolean isSingleton() {
-        return false;
+        return true;
     }
 
     @Override
