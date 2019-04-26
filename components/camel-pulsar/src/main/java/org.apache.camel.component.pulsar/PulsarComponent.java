@@ -30,7 +30,7 @@ public class PulsarComponent extends DefaultComponent {
     private final AutoConfiguration autoConfiguration;
     private final PulsarClient pulsarClient;
 
-    PulsarComponent(CamelContext context, AutoConfiguration autoConfiguration, PulsarClient pulsarClient) {
+    public PulsarComponent(CamelContext context, AutoConfiguration autoConfiguration, PulsarClient pulsarClient) {
         super(context);
         this.autoConfiguration = autoConfiguration;
         this.pulsarClient = pulsarClient;
