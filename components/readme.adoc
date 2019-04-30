@@ -32,7 +32,7 @@ Number of Components: 294 in 231 JAR artifacts (0 deprecated)
 `apns:name` | 2.8 | For sending notifications to Apple iOS devices.
 
 | link:camel-as2/camel-as2-component/src/main/docs/as2-component.adoc[AS2] (camel-as2) +
-`as2:apiName` | 2.22 | Component used for transferring data secure and reliable over the internet using the AS2 protocol.
+`as2:apiName/methodName` | 2.22 | Component used for transferring data secure and reliable over the internet using the AS2 protocol.
 
 | link:camel-asterisk/src/main/docs/asterisk-component.adoc[Asterisk] (camel-asterisk) +
 `asterisk:name` | 2.18 | The asterisk component is used to interact with Asterisk PBX Server.
@@ -130,7 +130,7 @@ Number of Components: 294 in 231 JAR artifacts (0 deprecated)
 | link:camel-azure/src/main/docs/azure-queue-component.adoc[Azure Storage Queue Service] (camel-azure) +
 `azure-queue:containerAndQueueUri` | 2.19 | The azure-queue component is used for storing and retrieving messages from Azure Storage Queue Service.
 
-| link:../core/camel-core/src/main/docs/bean-component.adoc[Bean] (camel-core) +
+| link:camel-bean/src/main/docs/bean-component.adoc[Bean] (camel-bean) +
 `bean:beanName` | 1.0 | The bean component is for invoking Java beans from Camel.
 
 | link:camel-bean-validator/src/main/docs/bean-validator-component.adoc[Bean Validator] (camel-bean-validator) +
@@ -166,8 +166,8 @@ Number of Components: 294 in 231 JAR artifacts (0 deprecated)
 | link:camel-chunk/src/main/docs/chunk-component.adoc[Chunk] (camel-chunk) +
 `chunk:resourceUri` | 2.15 | Transforms the message using a Chunk template.
 
-| link:../core/camel-core/src/main/docs/class-component.adoc[Class] (camel-core) +
-`class:beanName` | 2.4 | The Class Component is for invoking Java Classes (Java beans) from Camel.
+| link:camel-bean/src/main/docs/class-component.adoc[Class] (camel-bean) +
+`class:beanName` | 2.4 | The class component is for invoking Java classes (Java beans) from Camel.
 
 | link:camel-cm-sms/src/main/docs/cm-sms-component.adoc[CM SMS Gateway] (camel-cm-sms) +
 `cm-sms:host` | 2.18 | The cm-sms component allows to integrate with CM SMS Gateway.
@@ -473,7 +473,7 @@ Number of Components: 294 in 231 JAR artifacts (0 deprecated)
 `jolt:resourceUri` | 2.16 | The jolt component allows you to process a JSON messages using an JOLT specification (such as JSON-JSON transformation).
 
 | link:camel-jooq/src/main/docs/jooq-component.adoc[JOOQ] (camel-jooq) +
-`jooq:entityType/operation` | 3.0 | The jooq component enables you to store and retrieve entities from databases using JOOQ
+`jooq:entityType` | 3.0 | The jooq component enables you to store and retrieve entities from databases using JOOQ
 
 | link:camel-jpa/src/main/docs/jpa-component.adoc[JPA] (camel-jpa) +
 `jpa:entityType` | 1.0 | The jpa component enables you to store and retrieve Java objects from databases using JPA.
@@ -1000,13 +1000,13 @@ Number of Data Formats: 46 in 36 JAR artifacts (0 deprecated)
 ==== Expression Languages
 
 // languages: START
-Number of Languages: 17 in 8 JAR artifacts (0 deprecated)
+Number of Languages: 17 in 10 JAR artifacts (0 deprecated)
 
 [width="100%",cols="4,1,5",options="header"]
 |===
 | Language | Available From | Description
 
-| link:../core/camel-core/src/main/docs/bean-language.adoc[Bean method] (camel-core) | 1.3 | To use a Java bean (aka method call) in Camel expressions or predicates.
+| link:camel-bean/src/main/docs/bean-language.adoc[Bean method] (camel-bean) | 1.3 | To use a Java bean (aka method call) in Camel expressions or predicates.
 
 | link:../core/camel-core/src/main/docs/constant-language.adoc[Constant] (camel-core) | 1.5 | To use a constant value in Camel expressions or predicates.
 
@@ -1036,7 +1036,7 @@ Number of Languages: 17 in 8 JAR artifacts (0 deprecated)
 
 | link:../core/camel-core/src/main/docs/xtokenize-language.adoc[XML Tokenize] (camel-core) | 2.14 | To use Camel message body or header with a XML tokenizer in Camel expressions or predicates.
 
-| link:../core/camel-core/src/main/docs/xpath-language.adoc[XPath] (camel-core) | 1.1 | To use XPath (XML) in Camel expressions or predicates.
+| link:camel-xpath/src/main/docs/xpath-language.adoc[XPath] (camel-xpath) | 1.1 | To use XPath (XML) in Camel expressions or predicates.
 
 | link:camel-saxon/src/main/docs/xquery-language.adoc[XQuery] (camel-saxon) | 1.0 | To use XQuery (XML) in Camel expressions or predicates.
 |===

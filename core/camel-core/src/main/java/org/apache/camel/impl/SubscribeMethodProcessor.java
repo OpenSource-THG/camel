@@ -30,8 +30,6 @@ import org.apache.camel.Navigate;
 import org.apache.camel.Predicate;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.PredicateBuilder;
-import org.apache.camel.component.bean.BeanInfo;
-import org.apache.camel.component.bean.BeanProcessor;
 import org.apache.camel.processor.CamelInternalProcessor;
 import org.apache.camel.support.AsyncProcessorSupport;
 import org.apache.camel.support.service.ServiceHelper;
@@ -54,9 +52,8 @@ public final class SubscribeMethodProcessor extends AsyncProcessorSupport implem
         return endpoint;
     }
 
-    protected void addMethod(final Object pojo, final Method method, final Endpoint endpoint, String predicate) {
-        BeanInfo info = new BeanInfo(endpoint.getCamelContext(), method);
-        BeanProcessor answer = new BeanProcessor(pojo, info);
+    protected void addMethod(final Object pojo, final Method method, final Endpoint endpoint, String predicate) throws Exception {
+        Processor answer = endpoint.getCamelContext().getBeanProcessorFactory().createBeanProcessor(endpoint.getCamelContext(), pojo, method);
         // must ensure the consumer is being executed in an unit of work so synchronization callbacks etc is invoked
         CamelInternalProcessor internal = new CamelInternalProcessor(answer);
         internal.addAdvice(new CamelInternalProcessor.UnitOfWorkProcessorAdvice(null));

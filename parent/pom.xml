@@ -99,14 +99,14 @@
         <bsh-version>2.0b6</bsh-version>
         <boon-version>0.34</boon-version>
         <bouncycastle-version>1.60</bouncycastle-version>
-        <box-java-sdk-version>2.31.0</box-java-sdk-version>
+        <box-java-sdk-version>2.32.0</box-java-sdk-version>
         <braintree-gateway-version>2.93.0</braintree-gateway-version>
         <brave-zipkin-version>5.6.3</brave-zipkin-version>
         <build-helper-maven-plugin-version>1.12</build-helper-maven-plugin-version>
         <c3p0-version>0.9.5.4</c3p0-version>
         <c3p0-bundle-version>0.9.5.4_1</c3p0-bundle-version>
         <caffeine-version>2.7.0</caffeine-version>
-        <californium-version>1.0.7</californium-version>
+        <californium-version>2.0.0-M14</californium-version>
         <cassandra-driver-version>3.7.1</cassandra-driver-version>
         <cassandra-driver-guava-version>19.0</cassandra-driver-guava-version>
         <cassandra-version>3.7</cassandra-version>
@@ -290,8 +290,8 @@
         <htmlunit-core-js-version>2.23</htmlunit-core-js-version>
         <htrace-version>3.1.0-incubating</htrace-version>
         <httpunit-version>1.7</httpunit-version>
-        <httpcore4-version>4.4.10</httpcore4-version>
-        <httpclient4-version>4.5.6</httpclient4-version>
+        <httpcore4-version>4.4.11</httpcore4-version>
+        <httpclient4-version>4.5.8</httpclient4-version>
         <httpasyncclient-version>4.1.4</httpasyncclient-version>
         <httpclient-version>3.1</httpclient-version>
         <hystrix-version>1.5.18</hystrix-version>
@@ -380,7 +380,7 @@
         <jetty-plugin-version>${jetty-version}</jetty-plugin-version>
         <jetty-runner-groupId>org.eclipse.jetty</jetty-runner-groupId>
         <jettison-version>1.4.0</jettison-version>
-        <jgit-version>5.3.0.201903130848-r</jgit-version>
+        <jgit-version>5.3.1.201904271842-r</jgit-version>
         <jgroups-version>4.0.19.Final</jgroups-version>
         <jgroups-raft-version>0.4.2.Final</jgroups-raft-version>
         <jgroups-raft-jgroups-version>4.0.15.Final</jgroups-raft-jgroups-version>
@@ -514,7 +514,7 @@
         <nekohtml-version>1.9.22</nekohtml-version>
         <neoscada-version>0.4.0</neoscada-version>
         <netty3-version>3.10.6.Final</netty3-version>
-        <netty-version>4.1.34.Final</netty-version>
+        <netty-version>4.1.35.Final</netty-version>
         <netty-reactive-streams-version>2.0.3</netty-reactive-streams-version>
         <netty40-version>4.0.56.Final</netty40-version>
         <networknt-json-schema-validator-version>1.0.6</networknt-json-schema-validator-version>
@@ -1021,6 +1021,11 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-base64</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-bean</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -2345,6 +2350,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.camel</groupId>
+        <artifactId>camel-xpath</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
         <artifactId>camel-xslt</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -2555,6 +2565,11 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-base64-starter</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-bean-starter</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -3750,6 +3765,11 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-xmpp-starter</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-xpath-starter</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

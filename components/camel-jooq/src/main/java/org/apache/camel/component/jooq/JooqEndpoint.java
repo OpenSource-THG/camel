@@ -29,7 +29,7 @@ import org.apache.camel.support.ScheduledPollEndpoint;
 import org.jooq.Query;
 import org.jooq.ResultQuery;
 
-@UriEndpoint(firstVersion = "3.0.0", scheme = "jooq", syntax = "jooq:entityType/operation", title = "JOOQ", label = "database")
+@UriEndpoint(firstVersion = "3.0.0", scheme = "jooq", syntax = "jooq:entityType", title = "JOOQ", label = "database")
 public class JooqEndpoint extends ScheduledPollEndpoint {
 
     private Expression producerExpression;
@@ -125,13 +125,10 @@ public class JooqEndpoint extends ScheduledPollEndpoint {
     }
 
     @Override
-    public Consumer createConsumer(Processor processor) {
-        return new JooqConsumer(this, processor);
-    }
-
-    @Override
-    public boolean isSingleton() {
-        return true;
+    public Consumer createConsumer(Processor processor) throws Exception {
+        JooqConsumer consumer = new JooqConsumer(this, processor);
+        configureConsumer(consumer);
+        return consumer;
     }
 
 }

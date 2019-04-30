@@ -24,6 +24,8 @@ import org.apache.camel.support.DefaultProducer;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
+import org.eclipse.californium.core.network.CoapEndpoint;
+import org.eclipse.californium.scandium.DTLSConnector;
 
 /**
  * The CoAP producer.
@@ -91,6 +93,16 @@ public class CoAPProducer extends DefaultProducer {
                 uri = endpoint.getUri();
             }
             client = new CoapClient(uri);
+
+            // Configure TLS
+            if (CoAPEndpoint.enableTLS(uri)) {
+                DTLSConnector connector = endpoint.createDTLSConnector(null, true);
+                CoapEndpoint.Builder coapBuilder = new CoapEndpoint.Builder();
+                coapBuilder.setConnector(connector);
+
+                client.setEndpoint(coapBuilder.build());
+            }
+
         }
         return client;
     }

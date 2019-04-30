@@ -237,7 +237,7 @@ public abstract class ProcessorReifier<T extends ProcessorDefinition<?>> {
         return children;
     }
 
-    public void addRoutes(RouteContext routeContext, Collection<Route> routes) throws Exception {
+    public void addRoutes(RouteContext routeContext) throws Exception {
         Channel processor = makeProcessor(routeContext);
         if (processor == null) {
             // no processor to add
@@ -514,7 +514,7 @@ public abstract class ProcessorReifier<T extends ProcessorDefinition<?>> {
         ProcessorDefinitionHelper.resolveKnownConstantFields(definition);
 
         // also resolve properties and constant fields on embedded expressions
-        ProcessorDefinition<?> me = (ProcessorDefinition<?>) definition;
+        ProcessorDefinition<?> me = definition;
         if (me instanceof ExpressionNode) {
             ExpressionNode exp = (ExpressionNode) me;
             ExpressionDefinition expressionDefinition = exp.getExpression();

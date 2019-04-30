@@ -36,6 +36,8 @@ import org.apache.camel.model.validator.ValidatorDefinition;
 import org.apache.camel.runtimecatalog.RuntimeCamelCatalog;
 import org.apache.camel.runtimecatalog.impl.DefaultRuntimeCamelCatalog;
 import org.apache.camel.spi.AsyncProcessorAwaitManager;
+import org.apache.camel.spi.BeanProcessorFactory;
+import org.apache.camel.spi.BeanProxyFactory;
 import org.apache.camel.spi.BeanRepository;
 import org.apache.camel.spi.CamelBeanPostProcessor;
 import org.apache.camel.spi.CamelContextNameStrategy;
@@ -71,7 +73,7 @@ import org.apache.camel.support.DefaultRegistry;
 /**
  * Represents the context used to configure routes and the policies to use.
  */
-public class DefaultCamelContext extends AbstractCamelContext {
+public class DefaultCamelContext extends AbstractModelCamelContext {
 
     /**
      * Creates the {@link CamelContext} using {@link DefaultRegistry} as registry.
@@ -276,6 +278,14 @@ public class DefaultCamelContext extends AbstractCamelContext {
         return new HeadersMapFactoryResolver().resolve(this);
     }
 
+    protected BeanProxyFactory createBeanProxyFactory() {
+        return new BeanProxyFactoryResolver().resolve(this);
+    }
+
+    protected BeanProcessorFactory createBeanProcessorFactory() {
+        return new BeanProcessorFactoryResolver().resolve(this);
+    }
+
     protected LanguageResolver createLanguageResolver() {
         return new DefaultLanguageResolver();
     }
@@ -289,12 +299,12 @@ public class DefaultCamelContext extends AbstractCamelContext {
         return new DefaultEndpointRegistry(this, endpoints);
     }
 
-    protected ValidatorRegistry<ValidatorKey> createValidatorRegistry(List<ValidatorDefinition> validators) throws Exception {
-        return new DefaultValidatorRegistry(this, validators);
+    protected ValidatorRegistry<ValidatorKey> createValidatorRegistry() throws Exception {
+        return new DefaultValidatorRegistry(this, getValidators());
     }
 
-    protected TransformerRegistry<TransformerKey> createTransformerRegistry(List<TransformerDefinition> transformers) throws Exception {
-        return new DefaultTransformerRegistry(this, transformers);
+    protected TransformerRegistry<TransformerKey> createTransformerRegistry() throws Exception {
+        return new DefaultTransformerRegistry(this, getTransformers());
     }
 
     @Override
