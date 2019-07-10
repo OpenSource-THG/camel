@@ -20,12 +20,15 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.NoTypeConversionAvailableException;
 import org.apache.camel.TypeConversionException;
+import org.apache.camel.component.pulsar.configuration.PulsarEndpointConfiguration;
 import org.apache.camel.component.pulsar.utils.message.PulsarMessageUtils;
 import org.apache.camel.impl.DefaultProducer;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.ProducerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 public class PulsarProducer extends DefaultProducer {
 
@@ -60,17 +63,26 @@ public class PulsarProducer extends DefaultProducer {
     private synchronized void createProducer() throws org.apache.pulsar.client.api.PulsarClientException {
         if (producer == null) {
             final String topic = pulsarEndpoint.getTopic();
-            String producerName;
-            if (pulsarEndpoint.getConfiguration().getProducerName() == null) {
+            PulsarEndpointConfiguration configuration = pulsarEndpoint.getConfiguration();
+            String producerName = configuration.getProducerName();
+            if (producerName == null) {
                 producerName = topic + "-" + Thread.currentThread().getId();
-            } else {
-                producerName = pulsarEndpoint.getConfiguration().getProducerName();
             }
             final ProducerBuilder<byte[]> producerBuilder = pulsarEndpoint
                     .getPulsarClient()
                     .newProducer()
                     .producerName(producerName)
-                    .topic(topic);
+                    .topic(topic)
+                    .sendTimeout(configuration.getSendTimeoutMs(), TimeUnit.MILLISECONDS)
+                    .blockIfQueueFull(configuration.isBlockIfQueueFull())
+                    .maxPendingMessages(configuration.getMaxPendingMessages())
+                    .maxPendingMessagesAcrossPartitions(configuration.getMaxPendingMessagesAcrossPartitions())
+                    .batchingMaxPublishDelay(configuration.getBatchingMaxPublishDelayMicros(), TimeUnit.MICROSECONDS)
+                    .batchingMaxMessages(configuration.getMaxPendingMessages())
+                    .enableBatching(configuration.isBatchingEnabled());
+            if (configuration.getInitialSequenceId() != null) {
+                producerBuilder.initialSequenceId(configuration.getInitialSequenceId());
+            }
             producer = producerBuilder.create();
         }
     }
