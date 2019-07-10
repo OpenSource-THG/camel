@@ -57,7 +57,7 @@ public class PulsarEndpointConfiguration {
     @UriParam(label = "producer", description = "Control whether automatic batching of messages is enabled for the producer.", defaultValue = "true")
     private boolean batchingEnabled;
     @UriParam(label = "producer", description = "The first message published will have a sequence Id of initialSequenceId + 1.", defaultValue = "-1")
-    private long initialSequenceId;
+    private long initialSequenceId = -1;
 
     public String getSubscriptionName() {
         return subscriptionName;
