@@ -16,9 +16,12 @@
  */
 package org.apache.camel.component.file.remote.sftp;
 
+import java.security.interfaces.RSAPublicKey;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.sshd.server.auth.pubkey.PublickeyAuthenticator;
 import org.junit.Test;
 
 public class SftpKeyFileConsumeTest extends SftpServerTestSupport {
@@ -42,6 +45,11 @@ public class SftpKeyFileConsumeTest extends SftpServerTestSupport {
         context.startRoute("foo");
 
         assertMockEndpointsSatisfied();
+    }
+
+    @Override
+    protected PublickeyAuthenticator getPublickeyAuthenticator() {
+        return (username, key, session) -> key instanceof RSAPublicKey;
     }
 
     @Override

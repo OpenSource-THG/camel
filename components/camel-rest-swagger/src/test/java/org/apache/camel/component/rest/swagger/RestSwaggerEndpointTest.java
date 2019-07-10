@@ -21,10 +21,14 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import io.swagger.models.Operation;
 import io.swagger.models.Scheme;
 import io.swagger.models.Swagger;
+import io.swagger.models.auth.ApiKeyAuthDefinition;
+import io.swagger.models.auth.In;
+import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.PathParameter;
 import io.swagger.models.parameters.QueryParameter;
 
@@ -117,18 +121,18 @@ public class RestSwaggerEndpointTest {
             .isEqualTo("/");
 
         restConfiguration.setContextPath("/rest");
-        assertThat(endpoint.determineBasePath(swagger))
-            .as("When base path is specified in REST configuration and not specified in component the base path should be from the REST configuration")
+        assertThat(endpoint.determineBasePath(swagger)).as(
+            "When base path is specified in REST configuration and not specified in component the base path should be from the REST configuration")
             .isEqualTo("/rest");
 
         swagger.basePath("/specification");
-        assertThat(endpoint.determineBasePath(swagger))
-            .as("When base path is specified in the specification it should take precedence the one specified in the REST configuration")
+        assertThat(endpoint.determineBasePath(swagger)).as(
+            "When base path is specified in the specification it should take precedence the one specified in the REST configuration")
             .isEqualTo("/specification");
 
         component.setBasePath("/component");
-        assertThat(endpoint.determineBasePath(swagger))
-            .as("When base path is specified on the component it should take precedence over Swagger specification and REST configuration")
+        assertThat(endpoint.determineBasePath(swagger)).as(
+            "When base path is specified on the component it should take precedence over Swagger specification and REST configuration")
             .isEqualTo("/component");
 
         endpoint.setBasePath("/endpoint");
@@ -326,6 +330,32 @@ public class RestSwaggerEndpointTest {
     }
 
     @Test
+    public void shouldIncludeApiKeysQueryParameters() {
+        final CamelContext camelContext = mock(CamelContext.class);
+
+        final RestSwaggerComponent component = new RestSwaggerComponent();
+        component.setCamelContext(camelContext);
+
+        final RestSwaggerEndpoint endpoint = new RestSwaggerEndpoint("uri", "remaining", component,
+            Collections.emptyMap());
+        endpoint.setHost("http://petstore.swagger.io");
+
+        final Swagger swagger = new Swagger();
+        final ApiKeyAuthDefinition apiKeys = new ApiKeyAuthDefinition("key", In.HEADER);
+        swagger.securityDefinition("apiKeys", apiKeys);
+
+        final Operation operation = new Operation().parameter(new QueryParameter().name("q").required(true));
+        operation.addSecurity("apiKeys", Collections.emptyList());
+
+        assertThat(endpoint.determineEndpointParameters(swagger, operation))
+            .containsOnly(entry("host", "http://petstore.swagger.io"), entry("queryParameters", "q={q}"));
+
+        apiKeys.setIn(In.QUERY);
+        assertThat(endpoint.determineEndpointParameters(swagger, operation))
+            .containsOnly(entry("host", "http://petstore.swagger.io"), entry("queryParameters", "key={key}&q={q}"));
+    }
+
+    @Test
     public void shouldLoadSwaggerSpecifications() throws IOException {
         final CamelContext camelContext = mock(CamelContext.class);
         when(camelContext.getClassResolver()).thenReturn(new DefaultClassResolver());
@@ -357,6 +387,25 @@ public class RestSwaggerEndpointTest {
         when(camelContext.getClassResolver()).thenReturn(new DefaultClassResolver());
 
         RestSwaggerEndpoint.loadSpecificationFrom(camelContext, URI.create("non-existant.json"));
+    }
+
+    @Test
+    public void shouldResolveUris() {
+        final RestSwaggerEndpoint endpoint = new RestSwaggerEndpoint();
+        endpoint.parameters = new HashMap<>();
+        endpoint.parameters.put("param1", "value1");
+
+        final Map<String, Parameter> pathParameters = new HashMap<>();
+        pathParameters.put("param1", new PathParameter().name("param1"));
+        pathParameters.put("param2", new PathParameter().name("param2"));
+
+        assertThat(endpoint.resolveUri("/path", pathParameters)).isEqualTo("/path");
+        assertThat(endpoint.resolveUri("/path/{param1}", pathParameters)).isEqualTo("/path/value1");
+        assertThat(endpoint.resolveUri("/{param1}/path", pathParameters)).isEqualTo("/value1/path");
+        assertThat(endpoint.resolveUri("/{param1}/path/{param2}", pathParameters)).isEqualTo("/value1/path/{param2}");
+        assertThat(endpoint.resolveUri("/{param1}/{param2}", pathParameters)).isEqualTo("/value1/{param2}");
+        assertThat(endpoint.resolveUri("/path/{param1}/to/{param2}/rest", pathParameters))
+            .isEqualTo("/path/value1/to/{param2}/rest");
     }
 
     @Test

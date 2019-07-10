@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -139,7 +140,20 @@ public enum HdfsFileType {
             try {
                 String fname = hdfsPath.substring(hdfsPath.lastIndexOf('/'));
 
-                File outputDest = File.createTempFile(fname, ".hdfs");
+                // [CAMEL-13711] Files.createTempFile not equivalent to File.createTempFile
+                
+                File outputDest;
+                try {
+                    
+                    // First trying: Files.createTempFile
+                    outputDest = Files.createTempFile(fname, ".hdfs").toFile();
+                    
+                } catch (Exception ex) {
+                    
+                    // Now trying: File.createTempFile
+                    outputDest = File.createTempFile(fname, ".hdfs");
+                }
+
                 if (outputDest.exists()) {
                     outputDest.delete();
                 }

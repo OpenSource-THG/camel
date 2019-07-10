@@ -151,7 +151,6 @@ public final class RouteDefinitionHelper {
                         if (verb.hasCustomIdAssigned() && ObjectHelper.isNotEmpty(id) && !customIds.contains(id)) {
                             route.setId(id);
                             customIds.add(id);
-                            break;
                         }
                     }
                 }
@@ -165,9 +164,19 @@ public final class RouteDefinitionHelper {
                 
                 boolean done = false;
                 String id = null;
-                while (!done) {
+                int attempts = 0;
+                while (!done && attempts < 1000) {
+                    attempts++;
                     id = route.idOrCreate(context.getNodeIdFactory());
-                    done = !customIds.contains(id);
+                    if (customIds.contains(id)) {
+                        // reset id and try again
+                        route.setId(null);
+                    } else {
+                        done = true;
+                    }
+                }
+                if (!done) {
+                    throw new IllegalArgumentException("Cannot auto assign id to route: " + route);
                 }
                 route.setId(id);
                 ProcessorDefinitionHelper.addPropertyPlaceholdersChangeRevertAction(new Runnable() {
@@ -191,12 +200,13 @@ public final class RouteDefinitionHelper {
                     verb.setRouteId(id);
                 }
                 List<FromDefinition> fromDefinitions = route.getInputs();
-                
+
+                // if its the rest/rest-api endpoints then they should include the route id as well
                 if (ObjectHelper.isNotEmpty(fromDefinitions)) {
                     FromDefinition fromDefinition = fromDefinitions.get(0);
                     String endpointUri = fromDefinition.getEndpointUri();
-                    if (ObjectHelper.isNotEmpty(endpointUri)) {
-                        Map<String, Object> options = new HashMap<String, Object>();
+                    if (ObjectHelper.isNotEmpty(endpointUri) && (endpointUri.startsWith("rest:") || endpointUri.startsWith("rest-api:"))) {
+                        Map<String, Object> options = new HashMap<String, Object>(1);
                         options.put("routeId", route.getId());
                         endpointUri = URISupport.appendParametersToURI(endpointUri, options);
                      
@@ -214,13 +224,20 @@ public final class RouteDefinitionHelper {
      * Find verb associated with the route by mapping uri
      */
     private static VerbDefinition findVerbDefinition(RestDefinition rest, String endpointUri) {
+        VerbDefinition ret = null;
+        String preVerbUri = "";
         for (VerbDefinition verb : rest.getVerbs()) {
             String verbUri = rest.buildFromUri(verb);
-            if (endpointUri.startsWith(verbUri)) {
-                return verb;
+            if (endpointUri.startsWith(verbUri)
+                && preVerbUri.length() < verbUri.length()) {
+                //if there are multiple verb uri match, select the most specific one
+                //for example if the endpoint Uri is rest:get:/user:/{id}/user?produces=text%2Fplain
+                //then the verbUri rest:get:/user:/{id}/user should overweigh the est:get:/user:/{id}
+                preVerbUri = verbUri;
+                ret = verb;
             }
         }
-        return null;
+        return ret;
     }
 
     /**

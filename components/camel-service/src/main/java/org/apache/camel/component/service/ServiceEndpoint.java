@@ -43,7 +43,7 @@ import org.apache.camel.spi.UriPath;
 @UriEndpoint(
     firstVersion = "2.22.0",
     scheme = "service",
-    syntax = "service:serviceName:delegateUri",
+    syntax = "service:delegateUri",
     consumerClass = ServiceConsumer.class,
     consumerOnly = true,
     title = "Service",
@@ -100,6 +100,11 @@ public class ServiceEndpoint extends DefaultEndpoint implements DelegateEndpoint
     public boolean isSingleton() {
         return true;
     }
+
+    @Override
+    public boolean isLenientProperties() {
+        return true;
+    } 
 
     private ServiceDefinition computeServiceDefinition(CamelContext context, Endpoint delegateEndpoint) {
         Map<String, String> parameters = new HashMap<>();
