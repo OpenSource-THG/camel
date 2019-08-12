@@ -19,6 +19,7 @@ package org.apache.camel.component.pulsar.configuration;
 import org.apache.camel.component.pulsar.utils.consumers.SubscriptionType;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
+import org.apache.pulsar.client.api.CompressionType;
 
 import java.util.concurrent.TimeUnit;
 
@@ -43,7 +44,7 @@ public class PulsarEndpointConfiguration {
     private String consumerNamePrefix = "cons";
 
     @UriParam(label = "producer", description = "Send timeout in milliseconds", defaultValue = "30000")
-    private int sendTimeoutMs = 30000L;
+    private int sendTimeoutMs = 30000;
     @UriParam(label = "producer", description = "Whether to block the producing thread if pending messages queue is full or to throw a ProducerQueueIsFullError", defaultValue = "false")
     private boolean blockIfQueueFull = false;
     @UriParam(label = "producer", description = "Size of the pending massages queue. When the queue is full, by default, any further sends will fail unless blockIfQueueFull=true", defaultValue = "1000")
@@ -58,6 +59,8 @@ public class PulsarEndpointConfiguration {
     private boolean batchingEnabled;
     @UriParam(label = "producer", description = "The first message published will have a sequence Id of initialSequenceId + 1.", defaultValue = "-1")
     private long initialSequenceId = -1;
+    @UriParam(label = "producer", description = "Compression type to use, defaults to NONE from [NONE, LZ4, ZLIB]", defaultValue = "NONE")
+    private CompressionType compressionType = CompressionType.NONE;
 
     public String getSubscriptionName() {
         return subscriptionName;
@@ -177,5 +180,13 @@ public class PulsarEndpointConfiguration {
 
     public void setInitialSequenceId(long initialSequenceId) {
         this.initialSequenceId = initialSequenceId;
+    }
+
+    public CompressionType getCompressionType() {
+        return compressionType;
+    }
+
+    public void setCompressionType(String compressionType) {
+        this.compressionType = CompressionType.valueOf(compressionType.toUpperCase());
     }
 }
