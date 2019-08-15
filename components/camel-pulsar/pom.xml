@@ -44,6 +44,7 @@
     <maven.compiler.target>${jdk.version}</maven.compiler.target>
     <camel.osgi.export.pkg>org.apache.camel.component.pulsar.*</camel.osgi.export.pkg>
     <camel.osgi.export.service>org.apache.camel.spi.ComponentResolver;component=pulsar</camel.osgi.export.service>
+    <pulsar-client-version>2.3.1</pulsar-client-version>
   </properties>
 
   <dependencies>
