@@ -35,7 +35,7 @@ public class DockerConfiguration implements Cloneable {
     private DockerOperation operation;
     @UriParam(defaultValue = "localhost") @Metadata(required = true)
     private String host = "localhost";
-    @UriParam(defaultValue = "2375") @Metadata(required = true)
+    @UriParam(defaultValue = "2375")
     private Integer port = 2375;
     @UriParam(label = "security", secret = true)
     private String username;
@@ -65,7 +65,7 @@ public class DockerConfiguration implements Cloneable {
     private boolean socket;
     @UriParam(label = "advanced", defaultValue = "com.github.dockerjava.netty.NettyDockerCmdExecFactory")
     private String cmdExecFactory = "com.github.dockerjava.netty.NettyDockerCmdExecFactory";
-    
+    @UriParam(label = "advanced")
     private Map<String, Object> parameters = new HashMap<>();
 
     public String getHost() {
@@ -189,7 +189,7 @@ public class DockerConfiguration implements Cloneable {
         this.maxPerRouteConnections = maxPerRouteConnections;
     }
 
-    public boolean isLoggingFilterEnabled() {
+    public boolean isLoggingFilter() {
         return loggingFilter;
     }
 
@@ -200,7 +200,7 @@ public class DockerConfiguration implements Cloneable {
         this.loggingFilter = loggingFilterEnabled;
     }
 
-    public boolean isFollowRedirectFilterEnabled() {
+    public boolean isFollowRedirectFilter() {
         return followRedirectFilter;
     }
 

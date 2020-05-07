@@ -32,26 +32,20 @@ import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.security.UserGroupInformation;
 
 /**
- * For reading/writing from/to an HBase store (Hadoop database).
+ * Reading and write from/to an HBase store (Hadoop database).
  */
 @UriEndpoint(firstVersion = "2.10.0", scheme = "hbase", title = "HBase", syntax = "hbase:tableName", label = "hadoop")
 public class HBaseEndpoint extends DefaultEndpoint {
 
-    private Configuration configuration;
-    private final Connection connection;
-    private HBaseAdmin admin;
-
     @UriPath(description = "The name of the table") @Metadata(required = true)
     private final String tableName;
+    private transient TableName tableNameObj;
     @UriParam(label = "producer", defaultValue = "100")
     private int maxResults = 100;
     @UriParam
@@ -77,26 +71,21 @@ public class HBaseEndpoint extends DefaultEndpoint {
     @UriParam(prefix = "row.", multiValue = true)
     private Map<String, Object> rowMapping;
 
-    /**
-     * in the purpose of performance optimization
-     */
-    private byte[] tableNameBytes;
-
-    public HBaseEndpoint(String uri, HBaseComponent component, Connection connection, String tableName) {
+    public HBaseEndpoint(String uri, HBaseComponent component, String tableName) {
         super(uri, component);
         this.tableName = tableName;
-        this.connection = connection;
         if (this.tableName == null) {
             throw new IllegalArgumentException("Table name can not be null");
-        } else {
-            tableNameBytes = tableName.getBytes();
         }
+        tableNameObj = TableName.valueOf(tableName);
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         return new HBaseProducer(this);
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         HBaseConsumer consumer = new HBaseConsumer(this, processor);
         configureConsumer(consumer);
@@ -104,20 +93,9 @@ public class HBaseEndpoint extends DefaultEndpoint {
         return consumer;
     }
 
-    public Configuration getConfiguration() {
-        return configuration;
-    }
-
-    public void setConfiguration(Configuration configuration) {
-        this.configuration = configuration;
-    }
-
-    public HBaseAdmin getAdmin() {
-        return admin;
-    }
-
-    public void setAdmin(HBaseAdmin admin) {
-        this.admin = admin;
+    @Override
+    public HBaseComponent getComponent() {
+        return (HBaseComponent) super.getComponent();
     }
 
     public int getMaxResults() {
@@ -289,14 +267,14 @@ public class HBaseEndpoint extends DefaultEndpoint {
                 @Override
                 public Table run() {
                     try {
-                        return connection.getTable(TableName.valueOf(tableNameBytes));
+                        return getComponent().getConnection().getTable(tableNameObj);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }
             });
         } else {
-            return connection.getTable(TableName.valueOf(tableNameBytes));
+            return getComponent().getConnection().getTable(tableNameObj);
         }
     }
 
@@ -320,7 +298,7 @@ public class HBaseEndpoint extends DefaultEndpoint {
             if (parameters.containsKey(HBaseAttribute.HBASE_VALUE_TYPE.asOption(i))) {
                 String valueType = String.valueOf(parameters.remove(HBaseAttribute.HBASE_VALUE_TYPE.asOption(i)));
                 if (valueType != null && !valueType.isEmpty()) {
-                    rowModel.setRowType(getCamelContext().getClassResolver().resolveClass(valueType));
+                    cellModel.setValueType(getCamelContext().getClassResolver().resolveClass(valueType));
                 }
             }
             rowModel.getCells().add(cellModel);

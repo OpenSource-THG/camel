@@ -18,8 +18,8 @@ package org.apache.camel.component.hazelcast;
 
 import java.util.concurrent.TimeUnit;
 
-import com.hazelcast.core.IQueue;
-import com.hazelcast.core.TransactionalQueue;
+import com.hazelcast.collection.IQueue;
+import com.hazelcast.transaction.TransactionalQueue;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -38,7 +38,7 @@ public abstract class HazelcastSedaRecoverableConsumerTest extends HazelcastCame
     @Mock
     protected TransactionalQueue<Object> tqueue;
 
-    @EndpointInject(uri = "mock:result")
+    @EndpointInject("mock:result")
     protected MockEndpoint mock;
 
     @Test

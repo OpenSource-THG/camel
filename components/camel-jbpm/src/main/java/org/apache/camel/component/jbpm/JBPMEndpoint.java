@@ -35,8 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The jbpm component provides integration with jBPM (Business Process
- * Management).
+ * Interact with jBPM workflow engine over REST.
  */
 @UriEndpoint(firstVersion = "2.6.0", scheme = "jbpm", title = "JBPM", syntax = "jbpm:connectionURL", label = "process")
 public class JBPMEndpoint extends DefaultEndpoint {
@@ -69,7 +68,9 @@ public class JBPMEndpoint extends DefaultEndpoint {
 
     public Consumer createConsumer(Processor processor) throws Exception {
         LOGGER.debug("JBPM Consumer created and configured for deployment {}", configuration.getDeploymentId());
-        return new JBPMConsumer(this, processor);
+        JBPMConsumer consumer = new JBPMConsumer(this, processor);
+        configureConsumer(consumer);
+        return consumer;
     }
 
     public void setConfiguration(JBPMConfiguration configuration) {

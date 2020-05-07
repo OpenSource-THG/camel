@@ -57,14 +57,14 @@ public class RouteHealthCheck extends AbstractHealthCheck {
     @Override
     protected void doCall(HealthCheckResultBuilder builder, Map<String, Object> options) {
         if (route.getId() != null) {
-            final CamelContext context = route.getRouteContext().getCamelContext();
+            final CamelContext context = route.getCamelContext();
             final ServiceStatus status = context.getRouteController().getRouteStatus(route.getId());
 
             builder.detail("route.id", route.getId());
             builder.detail("route.status", status.name());
             builder.detail("route.context.name", context.getName());
 
-            if (route.getRouteContext().getRouteController() != null || route.getRouteContext().isAutoStartup()) {
+            if (route.getRouteController() != null || route.isAutoStartup()) {
                 if (status.isStarted()) {
                     builder.up();
                 } else if (status.isStopped()) {
@@ -74,8 +74,8 @@ public class RouteHealthCheck extends AbstractHealthCheck {
             } else {
                 LOGGER.debug("Route {} marked as UP (controlled={}, auto-startup={})",
                     route.getId(),
-                    route.getRouteContext().getRouteController() != null,
-                    route.getRouteContext().isAutoStartup()
+                    route.getRouteController() != null,
+                    route.isAutoStartup()
                 );
 
                 // Assuming that if no route controller is configured or if a
@@ -87,14 +87,16 @@ public class RouteHealthCheck extends AbstractHealthCheck {
             if (builder.state() != State.DOWN) {
                 // If JMX is enabled, use the Managed MBeans to determine route
                 // health based on performance counters.
-                ManagedRouteMBean managedRoute = context.getExtension(ManagedCamelContext.class).getManagedRoute(route.getId());
+                ManagedCamelContext managedCamelContext = context.getExtension(ManagedCamelContext.class);
+                if (managedCamelContext != null) {
+                    ManagedRouteMBean managedRoute = managedCamelContext.getManagedRoute(route.getId());
+                    if (managedRoute != null && !evaluators.isEmpty()) {
+                        for (PerformanceCounterEvaluator<ManagedRouteMBean> evaluator : evaluators) {
+                            evaluator.test(managedRoute, builder, options);
 
-                if (managedRoute != null && !evaluators.isEmpty()) {
-                    for (PerformanceCounterEvaluator<ManagedRouteMBean> evaluator : evaluators) {
-                        evaluator.test(managedRoute, builder, options);
-
-                        if (builder.state() == State.DOWN) {
-                            break;
+                            if (builder.state() == State.DOWN) { 
+                                break;
+                            }
                         }
                     }
                 }

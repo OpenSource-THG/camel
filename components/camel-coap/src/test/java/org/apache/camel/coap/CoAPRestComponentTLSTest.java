@@ -16,86 +16,81 @@
  */
 package org.apache.camel.coap;
 
-import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
-import org.apache.camel.Produce;
-import org.apache.camel.ProducerTemplate;
-import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mock.MockEndpoint;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+
+import org.apache.camel.model.rest.RestConfigurationDefinition;
+import org.apache.camel.support.jsse.KeyManagersParameters;
 import org.apache.camel.support.jsse.KeyStoreParameters;
-import org.apache.camel.test.AvailablePortFinder;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.eclipse.californium.core.coap.CoAP;
-import org.junit.Test;
+import org.apache.camel.support.jsse.SSLContextParameters;
+import org.apache.camel.support.jsse.TrustManagersParameters;
+import org.eclipse.californium.core.CoapClient;
+import org.eclipse.californium.core.network.CoapEndpoint;
+import org.eclipse.californium.scandium.DTLSConnector;
+import org.eclipse.californium.scandium.config.DtlsConnectorConfig;
 
-public class CoAPRestComponentTLSTest extends CamelTestSupport {
-    protected static final int PORT = AvailablePortFinder.getNextAvailable();
+/**
+ * Test the CoAP Rest Component with UDP + TLS
+ */
+public class CoAPRestComponentTLSTest extends CoAPRestComponentTestBase {
 
-    @Produce("direct:start")
-    protected ProducerTemplate sender;
-
-    @Test
-    public void testPOST() throws Exception {
-        MockEndpoint mock = getMockEndpoint("mock:result");
-        mock.expectedMinimumMessageCount(1);
-        mock.expectedBodiesReceived("Hello Camel CoAP");
-        mock.expectedHeaderReceived(CoAPConstants.COAP_RESPONSE_CODE, CoAP.ResponseCode.CONTENT.toString());
-        sender.sendBodyAndHeader("Camel CoAP", CoAPConstants.COAP_METHOD, "POST");
-        assertMockEndpointsSatisfied();
-    }
-
-    @Test
-    public void testGET() throws Exception {
-        MockEndpoint mock = getMockEndpoint("mock:result");
-        mock.expectedMinimumMessageCount(1);
-        mock.expectedBodiesReceived("Hello user");
-        mock.expectedHeaderReceived(CoAPConstants.COAP_RESPONSE_CODE, CoAP.ResponseCode.CONTENT.toString());
-        sender.sendBody("");
-        assertMockEndpointsSatisfied();
+    @Override
+    protected String getProtocol() {
+        return "coaps";
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
-        
-        KeyStoreParameters keystoreParameters = new KeyStoreParameters();
-        keystoreParameters.setResource("service.jks");
-        keystoreParameters.setPassword("security");
+    protected void decorateClient(CoapClient client) throws GeneralSecurityException, IOException {
+
+        DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder();
+        builder.setClientOnly();
 
         KeyStoreParameters truststoreParameters = new KeyStoreParameters();
         truststoreParameters.setResource("truststore.jks");
         truststoreParameters.setPassword("storepass");
 
-        context.getRegistry().bind("keystoreParameters", keystoreParameters);
-        context.getRegistry().bind("truststoreParameters", truststoreParameters);
+        KeyStore trustStore = truststoreParameters.createKeyStore();
+        Certificate[] certs = new Certificate[] {trustStore.getCertificate(trustStore.aliases().nextElement())};
+        builder.setTrustStore(certs);
 
-        return new RouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                restConfiguration().component("coap").scheme("coaps").host("localhost").port(PORT)
-                    .endpointProperty("keyStoreParameters", "#keystoreParameters")
-                    .endpointProperty("alias", "service")
-                    .endpointProperty("password", "security");
+        CoapEndpoint.Builder coapBuilder = new CoapEndpoint.Builder();
+        coapBuilder.setConnector(new DTLSConnector(builder.build()));
 
-                rest("/TestResource")
-                    .get().to("direct:get1")
-                    .post().to("direct:post1");
-
-                from("direct:get1").process(new Processor() {
-                    public void process(Exchange exchange) throws Exception {
-                        exchange.getOut().setBody("Hello user");
-                    }
-                });
-
-                from("direct:post1").process(new Processor() {
-                    public void process(Exchange exchange) throws Exception {
-                        exchange.getOut().setBody("Hello " + exchange.getIn().getBody(String.class));
-                    }
-                });
-
-                from("direct:start")
-                    .toF("coaps://localhost:%d/TestResource?trustStoreParameters=#truststoreParameters", PORT)
-                    .to("mock:result");
-            }
-        };
+        client.setEndpoint(coapBuilder.build());
     }
+
+    @Override
+    protected void decorateRestConfiguration(RestConfigurationDefinition restConfig) {
+        KeyStoreParameters keystoreParameters = new KeyStoreParameters();
+        keystoreParameters.setResource("service.jks");
+        keystoreParameters.setPassword("security");
+
+        SSLContextParameters serviceSSLContextParameters = new SSLContextParameters();
+        KeyManagersParameters serviceSSLKeyManagers = new KeyManagersParameters();
+        serviceSSLKeyManagers.setKeyPassword("security");
+        serviceSSLKeyManagers.setKeyStore(keystoreParameters);
+        serviceSSLContextParameters.setKeyManagers(serviceSSLKeyManagers);
+
+        KeyStoreParameters truststoreParameters = new KeyStoreParameters();
+        truststoreParameters.setResource("truststore.jks");
+        truststoreParameters.setPassword("storepass");
+
+        SSLContextParameters clientSSLContextParameters = new SSLContextParameters();
+        TrustManagersParameters clientSSLTrustManagers = new TrustManagersParameters();
+        clientSSLTrustManagers.setKeyStore(truststoreParameters);
+        clientSSLContextParameters.setTrustManagers(clientSSLTrustManagers);
+
+        context.getRegistry().bind("serviceSSLContextParameters", serviceSSLContextParameters);
+        context.getRegistry().bind("clientSSLContextParameters", clientSSLContextParameters);
+
+        restConfig.endpointProperty("sslContextParameters", "#serviceSSLContextParameters");
+    }
+
+    @Override
+    protected String getClientURI() {
+        return super.getClientURI() + "?sslContextParameters=#clientSSLContextParameters";
+    }
+
 }

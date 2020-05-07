@@ -19,6 +19,7 @@ package org.apache.camel.component.elsql;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.sql.DataSource;
 
 import com.opengamma.elsql.ElSql;
@@ -39,15 +40,19 @@ import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.ObjectHelper;
 import org.apache.camel.support.ResourceHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 /**
- * The elsql component is an extension to the existing SQL Component that uses ElSql to define the SQL queries.
+ * Use ElSql to define SQL queries. Extends the SQL Component.
  */
 @UriEndpoint(firstVersion = "2.16.0", scheme = "elsql", title = "ElSQL", syntax = "elsql:elsqlName:resourceUri",
         label = "database,sql")
 public class ElsqlEndpoint extends DefaultSqlEndpoint {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ElsqlEndpoint.class);
 
     private ElSql elSql;
     private final NamedParameterJdbcTemplate namedJdbcTemplate;
@@ -81,7 +86,7 @@ public class ElsqlEndpoint extends DefaultSqlEndpoint {
         final Exchange dummy = createExchange();
         final SqlParameterSource param = new ElsqlSqlMapSource(dummy, null);
         final String sql = elSql.getSql(elsqlName, new SpringSqlParams(param));
-        log.debug("ElsqlConsumer @{} using sql: {}", elsqlName, sql);
+        LOG.debug("ElsqlConsumer @{} using sql: {}", elsqlName, sql);
 
         final ElsqlConsumer consumer = new ElsqlConsumer(this, processor, namedJdbcTemplate, sql, param, preStategy, proStrategy);
         consumer.setMaxMessagesPerPoll(getMaxMessagesPerPoll());
@@ -169,6 +174,7 @@ public class ElsqlEndpoint extends DefaultSqlEndpoint {
         this.resourceUri = resourceUri;
     }
 
+    @Override
     public DataSource getDataSource() {
         return dataSource;
     }
@@ -176,6 +182,7 @@ public class ElsqlEndpoint extends DefaultSqlEndpoint {
     /**
      * Sets the DataSource to use to communicate with the database.
      */
+    @Override
     public void setDataSource(final DataSource dataSource) {
         this.dataSource = dataSource;
     }

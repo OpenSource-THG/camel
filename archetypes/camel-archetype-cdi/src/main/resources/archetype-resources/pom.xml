@@ -60,18 +60,12 @@
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-cdi</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
+    </dependency>
 
     <!-- logging -->
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-api</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <scope>runtime</scope>
-    </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
@@ -122,8 +116,8 @@
           </dependency>
           <dependency>
             <groupId>org.jboss.weld.se</groupId>
-            <artifactId>weld-se</artifactId>
-            <version>${weld2-version}</version>
+            <artifactId>weld-se-shaded</artifactId>
+            <version>${weld3-version}</version>
           </dependency>
         </dependencies>
       </plugin>

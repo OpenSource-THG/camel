@@ -127,8 +127,6 @@ public class WebsocketComponent extends DefaultComponent implements SSLContextPa
     }
 
     public WebsocketComponent() {
-        super();
-
         if (this.socketFactory == null) {
             this.socketFactory = new HashMap<>();
             this.socketFactory.put("default", new DefaultWebsocketFactory());
@@ -178,7 +176,7 @@ public class WebsocketComponent extends DefaultComponent implements SSLContextPa
 
                 // Create ServletContextHandler
                 ServletContextHandler context = createContext(server, connector, endpoint.getHandlers());
-                // setup the WebSocketComponentServlet initial parameters 
+                // setup the WebSocketComponentServlet initial parameters
                 setWebSocketComponentServletInitialParameter(context, endpoint);
                 server.setHandler(context);
 
@@ -191,7 +189,7 @@ public class WebsocketComponent extends DefaultComponent implements SSLContextPa
                 }
 
                 MemoryWebsocketStore memoryStore = new MemoryWebsocketStore();
-                
+
                 // Don't provide a Servlet object as Producer/Consumer will create them later on
                 connectorRef = new ConnectorRef(server, connector, null, memoryStore);
 
@@ -228,7 +226,7 @@ public class WebsocketComponent extends DefaultComponent implements SSLContextPa
                 WebsocketProducer producer = WebsocketProducer.class.cast(prodcon);
                 producer.setStore(connectorRef.memoryStore);
             }
-            
+
         }
     }
 
@@ -324,7 +322,7 @@ public class WebsocketComponent extends DefaultComponent implements SSLContextPa
         setProperties(endpoint, parameters);
         return endpoint;
     }
-    
+
     protected void setWebSocketComponentServletInitialParameter(ServletContextHandler context, WebsocketEndpoint endpoint) {
         if (endpoint.getBufferSize() != null) {
             context.setInitParameter("bufferSize", endpoint.getBufferSize().toString());
@@ -499,10 +497,12 @@ public class WebsocketComponent extends DefaultComponent implements SSLContextPa
         ServerConnector sslSocketConnector = null;
         if (sslContextParameters != null) {
             SslContextFactory sslContextFactory = new WebSocketComponentSslContextFactory();
+            sslContextFactory.setEndpointIdentificationAlgorithm(null);
             sslContextFactory.setSslContext(sslContextParameters.createSSLContext(getCamelContext()));
             sslSocketConnector = new ServerConnector(server, sslContextFactory);
         } else {
             SslContextFactory sslContextFactory = new SslContextFactory();
+            sslContextFactory.setEndpointIdentificationAlgorithm(null);
             sslContextFactory.setKeyStorePassword(sslKeyPassword);
             sslContextFactory.setKeyManagerPassword(sslPassword);
             if (sslKeystore != null) {
@@ -550,7 +550,7 @@ public class WebsocketComponent extends DefaultComponent implements SSLContextPa
         // Is not correct as it does not support to add port in the URI
         //return String.format("/%s/*", remaining);
 
-        int index = remaining.indexOf("/");
+        int index = remaining.indexOf('/');
         if (index != -1) {
             return remaining.substring(index, remaining.length());
         } else {
@@ -559,8 +559,8 @@ public class WebsocketComponent extends DefaultComponent implements SSLContextPa
     }
 
     private int extractPortNumber(String remaining) {
-        int index1 = remaining.indexOf(":");
-        int index2 = remaining.indexOf("/");
+        int index1 = remaining.indexOf(':');
+        int index2 = remaining.indexOf('/');
 
         if ((index1 != -1) && (index2 != -1)) {
             String result = remaining.substring(index1 + 1, index2);
@@ -571,7 +571,7 @@ public class WebsocketComponent extends DefaultComponent implements SSLContextPa
     }
 
     private String extractHostName(String remaining) {
-        int index = remaining.indexOf(":");
+        int index = remaining.indexOf(':');
         if (index != -1) {
             return remaining.substring(0, index);
         } else {

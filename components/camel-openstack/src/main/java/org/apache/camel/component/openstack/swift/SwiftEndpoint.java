@@ -27,7 +27,7 @@ import org.apache.camel.spi.UriPath;
 import org.openstack4j.core.transport.Config;
 
 /**
- * The openstack-swift component allows messages to be sent to an OpenStack object storage services.
+ * Access OpenStack Swift object/blob store.
  */
 @UriEndpoint(firstVersion = "2.19.0", scheme = "openstack-swift", title = "OpenStack Swift", syntax = "openstack-swift:host", label = "cloud,paas", producerOnly = true)
 public class SwiftEndpoint extends AbstractOpenstackEndpoint {
@@ -68,12 +68,12 @@ public class SwiftEndpoint extends AbstractOpenstackEndpoint {
     @Override
     public Producer createProducer() throws Exception {
         switch (subsystem) {
-        case SwiftConstants.SWIFT_SUBSYSTEM_OBJECTS:
-            return new ObjectProducer(this, createClient());
-        case SwiftConstants.SWIFT_SUBSYSTEM_CONTAINERS:
-            return new ContainerProducer(this, createClient());
-        default:
-            throw new IllegalArgumentException("Can't create producer with subsystem " + subsystem);
+            case SwiftConstants.SWIFT_SUBSYSTEM_OBJECTS:
+                return new ObjectProducer(this, createClient());
+            case SwiftConstants.SWIFT_SUBSYSTEM_CONTAINERS:
+                return new ContainerProducer(this, createClient());
+            default:
+                throw new IllegalArgumentException("Can't create producer with subsystem " + subsystem);
         }
     }
 
@@ -160,6 +160,7 @@ public class SwiftEndpoint extends AbstractOpenstackEndpoint {
         this.host = host;
     }
 
+    @Override
     public Config getConfig() {
         return config;
     }
@@ -172,6 +173,7 @@ public class SwiftEndpoint extends AbstractOpenstackEndpoint {
     }
 
 
+    @Override
     public String getApiVersion() {
         return apiVersion;
     }

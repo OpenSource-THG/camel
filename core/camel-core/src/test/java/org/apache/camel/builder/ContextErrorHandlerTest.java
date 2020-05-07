@@ -21,17 +21,19 @@ import java.util.List;
 import org.apache.camel.Channel;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
-import org.apache.camel.impl.EventDrivenConsumerRoute;
-import org.apache.camel.processor.DeadLetterChannel;
-import org.apache.camel.processor.RedeliveryPolicy;
+import org.apache.camel.impl.engine.DefaultRoute;
 import org.apache.camel.processor.SendProcessor;
+import org.apache.camel.processor.errorhandler.DeadLetterChannel;
+import org.apache.camel.processor.errorhandler.RedeliveryPolicy;
 import org.junit.Before;
 import org.junit.Test;
 
 public class ContextErrorHandlerTest extends ContextTestSupport {
 
+    @Override
     @Before
     public void setUp() throws Exception {
         setUseRouteBuilder(false);
@@ -41,13 +43,15 @@ public class ContextErrorHandlerTest extends ContextTestSupport {
         redeliveryPolicy.setUseExponentialBackOff(true);
         DeadLetterChannelBuilder deadLetterChannelBuilder = new DeadLetterChannelBuilder("mock:error");
         deadLetterChannelBuilder.setRedeliveryPolicy(redeliveryPolicy);
-        context.setErrorHandlerFactory(deadLetterChannelBuilder);
+        context.adapt(ExtendedCamelContext.class).setErrorHandlerFactory(deadLetterChannelBuilder);
     }
 
+    @Override
     protected void startCamelContext() throws Exception {
         // do nothing here
     }
 
+    @Override
     protected void stopCamelContext() throws Exception {
         // do nothing here
     }
@@ -76,7 +80,7 @@ public class ContextErrorHandlerTest extends ContextTestSupport {
             Endpoint key = route.getEndpoint();
             assertEquals("From endpoint", "seda://a", key.getEndpointUri());
 
-            EventDrivenConsumerRoute consumerRoute = assertIsInstanceOf(EventDrivenConsumerRoute.class, route);
+            DefaultRoute consumerRoute = assertIsInstanceOf(DefaultRoute.class, route);
             Processor processor = consumerRoute.getProcessor();
 
             Channel channel = unwrapChannel(processor);
@@ -100,7 +104,7 @@ public class ContextErrorHandlerTest extends ContextTestSupport {
         assertEquals("Number routes created" + list, 2, list.size());
         for (Route route : list) {
 
-            EventDrivenConsumerRoute consumerRoute = assertIsInstanceOf(EventDrivenConsumerRoute.class, route);
+            DefaultRoute consumerRoute = assertIsInstanceOf(DefaultRoute.class, route);
             Processor processor = consumerRoute.getProcessor();
 
             Channel channel = unwrapChannel(processor);

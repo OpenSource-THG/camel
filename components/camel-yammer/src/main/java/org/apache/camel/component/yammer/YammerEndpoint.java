@@ -24,7 +24,7 @@ import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.ScheduledPollEndpoint;
 
 /**
- * The yammer component allows you to interact with the Yammer enterprise social network.
+ * Interact with the Yammer enterprise social network.
  */
 @UriEndpoint(firstVersion = "2.12.0", scheme = "yammer", title = "Yammer", syntax = "yammer:function", label = "social")
 public class YammerEndpoint extends ScheduledPollEndpoint {
@@ -40,33 +40,45 @@ public class YammerEndpoint extends ScheduledPollEndpoint {
     }
 
     public YammerEndpoint(String uri, YammerComponent yammerComponent, YammerConfiguration config) {
+        super(uri, yammerComponent);
         this.setConfig(config);
     }
 
+    @Override
+    public YammerComponent getComponent() {
+        return (YammerComponent) super.getComponent();
+    }
+
+    @Override
     public Producer createProducer() throws Exception {
         return new YammerMessageProducer(this);
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        switch (config.getFunctionType()) {
-        case MESSAGES:
-        case ALGO:
-        case FOLLOWING:
-        case MY_FEED:
-        case PRIVATE:
-        case SENT:
-        case RECEIVED:
-            return new YammerMessagePollingConsumer(this, processor);
-        case USERS:
-        case CURRENT:
-            return new YammerUserPollingConsumer(this, processor);
-        default:
-            throw new Exception(String.format("%s is not a valid Yammer function type.", config.getFunction()));
-        }  
+        switch (config.getFunction()) {
+            case MESSAGES:
+            case ALGO:
+            case FOLLOWING:
+            case MY_FEED:
+            case PRIVATE:
+            case SENT:
+            case RECEIVED:
+                YammerMessagePollingConsumer answer = new YammerMessagePollingConsumer(this, processor);
+                configureConsumer(answer);
+                return answer;
+            case USERS:
+            case CURRENT:
+                YammerUserPollingConsumer answer2 = new YammerUserPollingConsumer(this, processor);
+                configureConsumer(answer2);
+                return answer2;
+            default:
+                throw new Exception(String.format("%s is not a valid Yammer function type.", config.getFunction()));
+        }
 
     }
 
-public YammerConfiguration getConfig() {
+    public YammerConfiguration getConfig() {
         return config;
     }
 

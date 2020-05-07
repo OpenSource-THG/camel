@@ -19,7 +19,6 @@ package org.apache.camel.component.hazelcast.set;
 import com.hazelcast.core.HazelcastInstance;
 import org.apache.camel.Component;
 import org.apache.camel.Consumer;
-import org.apache.camel.Endpoint;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.component.hazelcast.HazelcastCommand;
@@ -27,7 +26,7 @@ import org.apache.camel.component.hazelcast.HazelcastDefaultEndpoint;
 import org.apache.camel.spi.UriEndpoint;
 
 /**
- * The camel {@link Endpoint} to access <a href="http://www.hazelcast.com/">Hazelcast</a> distributed set.
+ * Perform operations on <a href="http://www.hazelcast.com/">Hazelcast</a> distributed set.
  */
 @UriEndpoint(firstVersion = "2.7.0", scheme = "hazelcast-set", title = "Hazelcast Set", syntax = "hazelcast-set:cacheName", label = "cache,datagrid")
 public class HazelcastSetEndpoint extends HazelcastDefaultEndpoint {

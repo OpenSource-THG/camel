@@ -28,7 +28,8 @@ import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.Route;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.impl.EventDrivenConsumerRoute;
+import org.apache.camel.impl.engine.DefaultRoute;
+import org.apache.camel.processor.errorhandler.DefaultErrorHandler;
 import org.apache.camel.support.service.ServiceHelper;
 import org.junit.Test;
 
@@ -90,6 +91,7 @@ public class StreamResequencerTest extends ContextTestSupport {
         return enable;
     }
 
+    @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
@@ -115,7 +117,7 @@ public class StreamResequencerTest extends ContextTestSupport {
         assertEquals("Number of routes created: " + list, 1, list.size());
 
         Route route = list.get(0);
-        EventDrivenConsumerRoute consumerRoute = assertIsInstanceOf(EventDrivenConsumerRoute.class, route);
+        DefaultRoute consumerRoute = assertIsInstanceOf(DefaultRoute.class, route);
 
         Channel channel = unwrapChannel(consumerRoute.getProcessor());
 

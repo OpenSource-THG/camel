@@ -37,7 +37,7 @@ import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.util.StringHelper;
 
 /**
- * The github component is used for integrating Camel with github.
+ * Interact with the GitHub API.
  *
  * The endpoint encapsulates portions of the GitHub API, relying on the org.eclipse.egit.github.core Java SDK.
  * Available endpoint URIs include:
@@ -87,6 +87,7 @@ public class GitHubEndpoint extends DefaultEndpoint {
         super(uri, component);
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         if (type == GitHubType.CLOSEPULLREQUEST) {
             return new ClosePullRequestProducer(this);
@@ -104,6 +105,7 @@ public class GitHubEndpoint extends DefaultEndpoint {
         throw new IllegalArgumentException("Cannot create producer with type " + type);
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         if (type == GitHubType.COMMIT) {
             StringHelper.notEmpty(branchName, "branchName", this);

@@ -25,6 +25,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.Expression;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.cloud.ServiceCallConstants;
@@ -36,8 +37,12 @@ import org.apache.camel.support.AsyncProcessorSupport;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.StringHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DefaultServiceCallProcessor extends AsyncProcessorSupport {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultServiceCallProcessor.class);
 
     private final ExchangePattern exchangePattern;
     private final String name;
@@ -85,7 +90,6 @@ public class DefaultServiceCallProcessor extends AsyncProcessorSupport {
     // Properties
     // *************************************
 
-
     public ExchangePattern getExchangePattern() {
         return exchangePattern;
     }
@@ -118,8 +122,9 @@ public class DefaultServiceCallProcessor extends AsyncProcessorSupport {
     // Lifecycle
     // *************************************
 
+
     @Override
-    protected void doStart() throws Exception {
+    protected void doInit() throws Exception {
         StringHelper.notEmpty(name, "name", "service name");
         ObjectHelper.notNull(camelContext, "camel context");
         ObjectHelper.notNull(expression, "expression");
@@ -130,9 +135,12 @@ public class DefaultServiceCallProcessor extends AsyncProcessorSupport {
         args.put("expression", expression);
         args.put("exchangePattern", exchangePattern);
 
-        Processor send = camelContext.getProcessorFactory().createProcessor(camelContext, "SendDynamicProcessor", args);
+        Processor send = camelContext.adapt(ExtendedCamelContext.class).getProcessorFactory().createProcessor(camelContext, "SendDynamicProcessor", args);
         processor = AsyncProcessorConverterHelper.convert(send);
+    }
 
+    @Override
+    protected void doStart() throws Exception {
         // Start services if needed
         ServiceHelper.startService(processor);
         ServiceHelper.startService(loadBalancer);
@@ -178,7 +186,7 @@ public class DefaultServiceCallProcessor extends AsyncProcessorSupport {
         final int port = service.getPort();
         final Map<String, String> meta = service.getMetadata();
 
-        log.debug("Service {} active at server: {}:{}", name, host, port);
+        LOG.debug("Service {} active at server: {}:{}", name, host, port);
 
         // set selected server as header
         message.setHeader(ServiceCallConstants.SERVICE_HOST, host);

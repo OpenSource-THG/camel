@@ -24,10 +24,11 @@ import java.util.Map;
 import org.apache.camel.CamelContext;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.FailedToCreateRouteException;
+import org.apache.camel.FailedToStartRouteException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.impl.JndiRegistry;
+import org.apache.camel.spi.Registry;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -42,11 +43,8 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.launch.JobLauncher;
 
-import static org.mockito.BDDMockito.any;
-import static org.mockito.BDDMockito.eq;
-import static org.mockito.BDDMockito.mock;
-import static org.mockito.BDDMockito.verify;
-import static org.mockito.BDDMockito.when;
+
+import static org.mockito.BDDMockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SpringBatchEndpointTest extends CamelTestSupport {
@@ -68,10 +66,10 @@ public class SpringBatchEndpointTest extends CamelTestSupport {
     Job dynamicMockjob;
 
     // Camel fixtures
-    @EndpointInject(uri = "mock:test")
+    @EndpointInject("mock:test")
     MockEndpoint mockEndpoint;
 
-    @EndpointInject(uri = "mock:error")
+    @EndpointInject("mock:error")
     MockEndpoint errorEndpoint;
 
     @Override
@@ -93,8 +91,8 @@ public class SpringBatchEndpointTest extends CamelTestSupport {
     }
 
     @Override
-    public JndiRegistry createRegistry() throws Exception {
-        JndiRegistry registry = super.createRegistry();
+    public Registry createCamelRegistry() throws Exception {
+        SimpleRegistry registry = new SimpleRegistry();
         registry.bind("jobLauncher", jobLauncher);
         registry.bind("alternativeJobLauncher", alternativeJobLauncher);
         registry.bind("mockJob", job);
@@ -193,7 +191,7 @@ public class SpringBatchEndpointTest extends CamelTestSupport {
         mockEndpoint.expectedBodiesReceived(jobExecution);
     }
 
-    @Test(expected = FailedToCreateRouteException.class)
+    @Test(expected = FailedToStartRouteException.class)
     public void shouldThrowExceptionIfUsedAsConsumer() throws Exception {
         // When
         context().addRoutes(new RouteBuilder() {

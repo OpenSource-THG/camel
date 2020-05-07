@@ -25,7 +25,7 @@ import org.apache.camel.spi.UriPath;
 import org.openstack4j.core.transport.Config;
 
 /**
- * The openstack-glance component allows messages to be sent to an OpenStack image services.
+ * Manage VM images and metadata definitions in OpenStack Glance.
  */
 @UriEndpoint(firstVersion = "2.19.0", scheme = "openstack-glance", title = "OpenStack Glance", syntax = "openstack-glance:host", label = "cloud,paas", producerOnly = true)
 public class GlanceEndpoint extends AbstractOpenstackEndpoint {
@@ -139,6 +139,7 @@ public class GlanceEndpoint extends AbstractOpenstackEndpoint {
         this.host = host;
     }
 
+    @Override
     public Config getConfig() {
         return config;
     }
@@ -150,6 +151,7 @@ public class GlanceEndpoint extends AbstractOpenstackEndpoint {
         this.config = config;
     }
 
+    @Override
     public String getApiVersion() {
         return apiVersion;
     }

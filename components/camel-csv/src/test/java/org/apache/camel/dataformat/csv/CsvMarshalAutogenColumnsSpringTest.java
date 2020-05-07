@@ -23,9 +23,12 @@ import java.util.Map;
 
 import org.apache.camel.EndpointInject;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.spring.CamelSpringTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import static org.apache.camel.dataformat.csv.TestUtils.LS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Spring based integration test for the <code>CsvDataFormat</code> demonstrating the usage of
@@ -33,14 +36,14 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class CsvMarshalAutogenColumnsSpringTest extends CamelSpringTestSupport {
 
-    @EndpointInject(uri = "mock:result")
+    @EndpointInject("mock:result")
     private MockEndpoint result;
 
-    @EndpointInject(uri = "mock:result2")
+    @EndpointInject("mock:result2")
     private MockEndpoint result2;
 
     @Test
-    public void retrieveColumnsWithAutogenColumnsFalseAndItemColumnsSet() throws Exception {
+    void retrieveColumnsWithAutogenColumnsFalseAndItemColumnsSet() throws Exception {
         result.expectedMessageCount(1);
 
         template.sendBody("direct:start", createBody());
@@ -55,7 +58,7 @@ public class CsvMarshalAutogenColumnsSpringTest extends CamelSpringTestSupport {
     }
 
     @Test
-    public void retrieveColumnsWithAutogenColumnsFalseAndOrderIdAmountColumnsSet() throws Exception {
+    void retrieveColumnsWithAutogenColumnsFalseAndOrderIdAmountColumnsSet() throws Exception {
         result2.expectedMessageCount(1);
 
         template.sendBody("direct:start2", createBody());

@@ -22,9 +22,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.WrappedFile;
 import org.apache.camel.component.file.FileConsumer;
 import org.apache.camel.component.file.GenericFile;
@@ -148,7 +150,7 @@ public class TarAggregationStrategy implements AggregationStrategy {
                 throw new GenericFileOperationFailedException(e.getMessage(), e);
             }
             answer = newExchange;
-            answer.addOnCompletion(new DeleteTarFileOnCompletion(tarFile));
+            answer.adapt(ExtendedExchange.class).addOnCompletion(new DeleteTarFileOnCompletion(tarFile));
         } else {
             tarFile = oldExchange.getIn().getBody(File.class);
         }
@@ -193,7 +195,7 @@ public class TarAggregationStrategy implements AggregationStrategy {
     }
 
     private void addFileToTar(File source, File file, String fileName) throws IOException, ArchiveException {
-        File tmpTar = File.createTempFile(source.getName(), null, parentDir);
+        File tmpTar = Files.createTempFile(parentDir.toPath(), source.getName(), null).toFile();
         tmpTar.delete();
         if (!source.renameTo(tmpTar)) {
             throw new IOException("Could not make temp file (" + source.getName() + ")");
@@ -228,7 +230,7 @@ public class TarAggregationStrategy implements AggregationStrategy {
     }
 
     private void addEntryToTar(File source, String entryName, byte[] buffer, int length) throws IOException, ArchiveException {
-        File tmpTar = File.createTempFile(source.getName(), null, parentDir);
+        File tmpTar = Files.createTempFile(parentDir.toPath(), source.getName(), null).toFile();
         tmpTar.delete();
         if (!source.renameTo(tmpTar)) {
             throw new IOException("Cannot create temp file: " + source.getName());

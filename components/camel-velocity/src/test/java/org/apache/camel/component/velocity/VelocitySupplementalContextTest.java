@@ -29,10 +29,10 @@ import org.junit.Test;
 
 public class VelocitySupplementalContextTest extends CamelTestSupport {
 
-    @Produce(uri = "direct:input")
+    @Produce("direct:input")
     protected ProducerTemplate inputEndpoint;
 
-    @EndpointInject(uri = "mock:results")
+    @EndpointInject("mock:results")
     protected MockEndpoint outputEndpoint;
 
     @Test
@@ -61,7 +61,7 @@ public class VelocitySupplementalContextTest extends CamelTestSupport {
             public void configure() throws Exception {
                 from("direct:input")
                     .setHeader(VelocityConstants.VELOCITY_SUPPLEMENTAL_CONTEXT).constant(supplementalContext)
-                    .to("velocity:template-in-header")
+                    .to("velocity:template-in-header?allowTemplateFromHeader=true")
                     .to("mock:results");
             }
         };

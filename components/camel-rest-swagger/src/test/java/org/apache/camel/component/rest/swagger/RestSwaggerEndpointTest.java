@@ -26,14 +26,13 @@ import java.util.Map;
 import io.swagger.models.Operation;
 import io.swagger.models.Scheme;
 import io.swagger.models.Swagger;
+import io.swagger.models.auth.ApiKeyAuthDefinition;
+import io.swagger.models.auth.In;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.PathParameter;
 import io.swagger.models.parameters.QueryParameter;
-
 import org.apache.camel.CamelContext;
-import org.apache.camel.Endpoint;
-import org.apache.camel.Producer;
-import org.apache.camel.impl.DefaultClassResolver;
+import org.apache.camel.impl.engine.DefaultClassResolver;
 import org.apache.camel.spi.RestConfiguration;
 import org.junit.Test;
 
@@ -73,26 +72,6 @@ public class RestSwaggerEndpointTest {
     }
 
     @Test
-    public void shouldCreateProducers() throws Exception {
-        final CamelContext camelContext = mock(CamelContext.class);
-        when(camelContext.getClassResolver()).thenReturn(new DefaultClassResolver());
-        final Endpoint endpointDelegate = mock(Endpoint.class);
-        when(camelContext.getEndpoint("rest:GET:/v2:/pet/{petId}")).thenReturn(endpointDelegate);
-        final Producer delegateProducer = mock(Producer.class);
-        when(endpointDelegate.createProducer()).thenReturn(delegateProducer);
-
-        final RestSwaggerComponent component = new RestSwaggerComponent(camelContext);
-        component.setHost("http://petstore.swagger.io");
-
-        final RestSwaggerEndpoint endpoint = new RestSwaggerEndpoint("rest-swagger:getPetById", "getPetById", component,
-            Collections.emptyMap());
-
-        final Producer producer = endpoint.createProducer();
-
-        assertThat(producer).isSameAs(delegateProducer);
-    }
-
-    @Test
     public void shouldCreateQueryParameterExpressions() {
         assertThat(RestSwaggerEndpoint.queryParameterExpression(new QueryParameter().name("q").required(true)))
             .isEqualTo("q={q}");
@@ -105,7 +84,7 @@ public class RestSwaggerEndpointTest {
         final RestConfiguration restConfiguration = new RestConfiguration();
 
         final CamelContext camelContext = mock(CamelContext.class);
-        when(camelContext.getRestConfiguration("rest-swagger", true)).thenReturn(restConfiguration);
+        when(camelContext.getRestConfiguration()).thenReturn(restConfiguration);
 
         final Swagger swagger = new Swagger();
 
@@ -119,18 +98,18 @@ public class RestSwaggerEndpointTest {
             .isEqualTo("/");
 
         restConfiguration.setContextPath("/rest");
-        assertThat(endpoint.determineBasePath(swagger))
-            .as("When base path is specified in REST configuration and not specified in component the base path should be from the REST configuration")
+        assertThat(endpoint.determineBasePath(swagger)).as(
+            "When base path is specified in REST configuration and not specified in component the base path should be from the REST configuration")
             .isEqualTo("/rest");
 
         swagger.basePath("/specification");
-        assertThat(endpoint.determineBasePath(swagger))
-            .as("When base path is specified in the specification it should take precedence the one specified in the REST configuration")
+        assertThat(endpoint.determineBasePath(swagger)).as(
+            "When base path is specified in the specification it should take precedence the one specified in the REST configuration")
             .isEqualTo("/specification");
 
         component.setBasePath("/component");
-        assertThat(endpoint.determineBasePath(swagger))
-            .as("When base path is specified on the component it should take precedence over Swagger specification and REST configuration")
+        assertThat(endpoint.determineBasePath(swagger)).as(
+            "When base path is specified on the component it should take precedence over Swagger specification and REST configuration")
             .isEqualTo("/component");
 
         endpoint.setBasePath("/endpoint");
@@ -158,39 +137,39 @@ public class RestSwaggerEndpointTest {
 
         component.setComponentName("xyz");
         assertThat(endpoint.determineEndpointParameters(swagger, operation))
-            .containsOnly(entry("host", "http://petstore.swagger.io"), entry("componentName", "xyz"));
+            .containsOnly(entry("host", "http://petstore.swagger.io"), entry("producerComponentName", "xyz"));
 
         swagger.consumes("application/json").produces("application/xml");
         assertThat(endpoint.determineEndpointParameters(swagger, operation)).containsOnly(
-            entry("host", "http://petstore.swagger.io"), entry("componentName", "xyz"),
+            entry("host", "http://petstore.swagger.io"), entry("producerComponentName", "xyz"),
             entry("consumes", "application/xml"), entry("produces", "application/json"));
 
         component.setProduces("application/json");
         component.setConsumes("application/atom+xml");
         assertThat(endpoint.determineEndpointParameters(swagger, operation)).containsOnly(
-            entry("host", "http://petstore.swagger.io"), entry("componentName", "xyz"),
+            entry("host", "http://petstore.swagger.io"), entry("producerComponentName", "xyz"),
             entry("consumes", "application/atom+xml"), entry("produces", "application/json"));
 
         endpoint.setProduces("application/atom+xml");
         endpoint.setConsumes("application/json");
         assertThat(endpoint.determineEndpointParameters(swagger, operation)).containsOnly(
-            entry("host", "http://petstore.swagger.io"), entry("componentName", "xyz"),
+            entry("host", "http://petstore.swagger.io"), entry("producerComponentName", "xyz"),
             entry("consumes", "application/json"), entry("produces", "application/atom+xml"));
 
         endpoint.setComponentName("zyx");
         assertThat(endpoint.determineEndpointParameters(swagger, operation)).containsOnly(
-            entry("host", "http://petstore.swagger.io"), entry("componentName", "zyx"),
+            entry("host", "http://petstore.swagger.io"), entry("producerComponentName", "zyx"),
             entry("consumes", "application/json"), entry("produces", "application/atom+xml"));
 
         operation.addParameter(new QueryParameter().name("q").required(true));
         assertThat(endpoint.determineEndpointParameters(swagger, operation)).containsOnly(
-            entry("host", "http://petstore.swagger.io"), entry("componentName", "zyx"),
+            entry("host", "http://petstore.swagger.io"), entry("producerComponentName", "zyx"),
             entry("consumes", "application/json"), entry("produces", "application/atom+xml"),
             entry("queryParameters", "q={q}"));
 
         operation.addParameter(new QueryParameter().name("o"));
         assertThat(endpoint.determineEndpointParameters(swagger, operation)).containsOnly(
-            entry("host", "http://petstore.swagger.io"), entry("componentName", "zyx"),
+            entry("host", "http://petstore.swagger.io"), entry("producerComponentName", "zyx"),
             entry("consumes", "application/json"), entry("produces", "application/atom+xml"),
             entry("queryParameters", "q={q}&o={o?}"));
     }
@@ -288,13 +267,8 @@ public class RestSwaggerEndpointTest {
     public void shouldHonourHostPrecedence() {
         final RestConfiguration globalRestConfiguration = new RestConfiguration();
 
-        final RestConfiguration componentRestConfiguration = new RestConfiguration();
-        final RestConfiguration specificRestConfiguration = new RestConfiguration();
-
         final CamelContext camelContext = mock(CamelContext.class);
         when(camelContext.getRestConfiguration()).thenReturn(globalRestConfiguration);
-        when(camelContext.getRestConfiguration("rest-swagger", false)).thenReturn(componentRestConfiguration);
-        when(camelContext.getRestConfiguration("petstore", false)).thenReturn(specificRestConfiguration);
 
         final RestSwaggerComponent component = new RestSwaggerComponent();
         component.setCamelContext(camelContext);
@@ -313,10 +287,6 @@ public class RestSwaggerEndpointTest {
         globalRestConfiguration.setScheme("http");
         assertThat(endpoint.determineHost(swagger)).isEqualTo("http://component-rest");
 
-        specificRestConfiguration.setHost("specific-rest");
-        specificRestConfiguration.setScheme("http");
-        assertThat(endpoint.determineHost(swagger)).isEqualTo("http://specific-rest");
-
         swagger.host("specification").scheme(Scheme.HTTP);
         assertThat(endpoint.determineHost(swagger)).isEqualTo("http://specification");
 
@@ -328,12 +298,38 @@ public class RestSwaggerEndpointTest {
     }
 
     @Test
+    public void shouldIncludeApiKeysQueryParameters() {
+        final CamelContext camelContext = mock(CamelContext.class);
+
+        final RestSwaggerComponent component = new RestSwaggerComponent();
+        component.setCamelContext(camelContext);
+
+        final RestSwaggerEndpoint endpoint = new RestSwaggerEndpoint("uri", "remaining", component,
+            Collections.emptyMap());
+        endpoint.setHost("http://petstore.swagger.io");
+
+        final Swagger swagger = new Swagger();
+        final ApiKeyAuthDefinition apiKeys = new ApiKeyAuthDefinition("key", In.HEADER);
+        swagger.securityDefinition("apiKeys", apiKeys);
+
+        final Operation operation = new Operation().parameter(new QueryParameter().name("q").required(true));
+        operation.addSecurity("apiKeys", Collections.emptyList());
+
+        assertThat(endpoint.determineEndpointParameters(swagger, operation))
+            .containsOnly(entry("host", "http://petstore.swagger.io"), entry("queryParameters", "q={q}"));
+
+        apiKeys.setIn(In.QUERY);
+        assertThat(endpoint.determineEndpointParameters(swagger, operation))
+            .containsOnly(entry("host", "http://petstore.swagger.io"), entry("queryParameters", "key={key}&q={q}"));
+    }
+
+    @Test
     public void shouldLoadSwaggerSpecifications() throws IOException {
         final CamelContext camelContext = mock(CamelContext.class);
         when(camelContext.getClassResolver()).thenReturn(new DefaultClassResolver());
 
         assertThat(
-            RestSwaggerEndpoint.loadSpecificationFrom(camelContext, RestSwaggerComponent.DEFAULT_SPECIFICATION_URI))
+            RestSwaggerEndpoint.loadSpecificationFrom(camelContext, RestSwaggerComponent.DEFAULT_SPECIFICATION_URI, null))
                 .isNotNull();
     }
 
@@ -351,6 +347,8 @@ public class RestSwaggerEndpointTest {
         assertThat(RestSwaggerEndpoint.pickBestScheme(null, Collections.emptyList())).isNull();
 
         assertThat(RestSwaggerEndpoint.pickBestScheme(null, null)).isNull();
+
+        assertThat(RestSwaggerEndpoint.pickBestScheme("file", null)).isNull();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -358,7 +356,7 @@ public class RestSwaggerEndpointTest {
         final CamelContext camelContext = mock(CamelContext.class);
         when(camelContext.getClassResolver()).thenReturn(new DefaultClassResolver());
 
-        RestSwaggerEndpoint.loadSpecificationFrom(camelContext, URI.create("non-existant.json"));
+        RestSwaggerEndpoint.loadSpecificationFrom(camelContext, URI.create("non-existant.json"), null);
     }
 
     @Test

@@ -19,13 +19,11 @@ package org.apache.camel.component.aws.swf;
 import java.util.Map;
 
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
-import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient;
 import com.amazonaws.services.simpleworkflow.flow.ActivitySchedulingOptions;
 import com.amazonaws.services.simpleworkflow.flow.DataConverter;
 import com.amazonaws.services.simpleworkflow.flow.WorkflowTypeRegistrationOptions;
 import com.amazonaws.services.simpleworkflow.flow.worker.ActivityTypeExecutionOptions;
 import com.amazonaws.services.simpleworkflow.flow.worker.ActivityTypeRegistrationOptions;
-
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
@@ -119,7 +117,8 @@ public class SWFConfiguration implements Cloneable {
     }
 
     /**
-     * Amazon AWS Region.
+     * Amazon AWS Region. When using this parameter, the configuration will expect the capitalized name of the region (for example AP_EAST_1)
+     * You'll need to use the name Regions.EU_WEST_1.name()
      */
     public void setRegion(String region) {
         this.region = region;

@@ -44,9 +44,9 @@ public class BindySimpleFixedLengthWithLinkTest extends CamelTestSupport {
 
     private static final String TEST_RECORD = "AAABBBCCC\r\n";
 
-    @EndpointInject(uri = URI_MOCK_UNMARSHALL_RESULT)
+    @EndpointInject(URI_MOCK_UNMARSHALL_RESULT)
     private MockEndpoint unmarshallResult;
-    @EndpointInject(uri = URI_MOCK_MARSHALL_RESULT)
+    @EndpointInject(URI_MOCK_MARSHALL_RESULT)
     private MockEndpoint marshallResult;
 
     // *************************************************************************
@@ -106,7 +106,7 @@ public class BindySimpleFixedLengthWithLinkTest extends CamelTestSupport {
                 BindyDataFormat bindy = new BindyDataFormat();
                 bindy.setClassType(Order.class);
                 bindy.setLocale("en");
-                bindy.setType(BindyType.Fixed);
+                bindy.type(BindyType.Fixed);
 
                 from(URI_DIRECT_UNMARSHALL)
                         .unmarshal(bindy)

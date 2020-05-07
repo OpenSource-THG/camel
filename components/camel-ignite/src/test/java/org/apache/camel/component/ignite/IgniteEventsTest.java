@@ -16,15 +16,14 @@
  */
 package org.apache.camel.component.ignite;
 
-
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
 import org.apache.camel.ServiceStatus;
@@ -34,10 +33,9 @@ import org.apache.ignite.IgniteCache;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.events.Event;
 import org.apache.ignite.events.EventType;
+import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Test;
-
-import static com.google.common.truth.Truth.assert_;
 
 public class IgniteEventsTest extends AbstractIgniteTest {
 
@@ -56,60 +54,31 @@ public class IgniteEventsTest extends AbstractIgniteTest {
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("ignite-events:abc").to("mock:test1");
+                from("ignite-events:" + resourceUid).to("mock:test1");
             }
         });
 
         getMockEndpoint("mock:test1").expectedMinimumMessageCount(9);
 
-        IgniteCache<String, String> cache = ignite().getOrCreateCache("abc");
+        IgniteCache<String, String> cache = ignite().getOrCreateCache(resourceUid);
 
         // Generate cache activity.
-        cache.put("abc", "123");
-        cache.get("abc");
-        cache.remove("abc");
-        cache.withExpiryPolicy(CreatedExpiryPolicy.factoryOf(new Duration(TimeUnit.MILLISECONDS, 100)).create()).put("abc", "123");
+        cache.put(resourceUid, "123");
+        cache.get(resourceUid);
+        cache.remove(resourceUid);
+        cache.withExpiryPolicy(CreatedExpiryPolicy.factoryOf(new Duration(TimeUnit.MILLISECONDS, 100)).create()).put(resourceUid, "123");
 
         Thread.sleep(150);
 
-        cache.get("abc");
+        cache.get(resourceUid);
 
         assertMockEndpointsSatisfied();
 
         List<Integer> eventTypes = receivedEventTypes("mock:test1");
 
-        assert_().that(eventTypes).containsAllOf(EventType.EVT_CACHE_STARTED, EventType.EVT_CACHE_ENTRY_CREATED, EventType.EVT_CACHE_OBJECT_PUT, EventType.EVT_CACHE_OBJECT_READ,
-                EventType.EVT_CACHE_OBJECT_REMOVED, EventType.EVT_CACHE_OBJECT_PUT, EventType.EVT_CACHE_OBJECT_EXPIRED).inOrder();
+        Assertions.assertThat(eventTypes).containsSubsequence(EventType.EVT_CACHE_STARTED, EventType.EVT_CACHE_ENTRY_CREATED, EventType.EVT_CACHE_OBJECT_PUT, EventType.EVT_CACHE_OBJECT_READ,
+                                                 EventType.EVT_CACHE_OBJECT_REMOVED, EventType.EVT_CACHE_OBJECT_PUT, EventType.EVT_CACHE_OBJECT_EXPIRED);
 
-    }
-
-    @Test
-    public void testConsumeFilteredEventsWithRef() throws Exception {
-        context.getRegistry().bind("filter", Sets.newHashSet(EventType.EVT_CACHE_OBJECT_PUT));
-
-        context.addRoutes(new RouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                from("ignite-events:abc?events=#filter").to("mock:test2");
-            }
-        });
-
-        getMockEndpoint("mock:test2").expectedMessageCount(2);
-
-        IgniteCache<String, String> cache = ignite().getOrCreateCache("abc");
-
-        // Generate cache activity.
-        cache.put("abc", "123");
-        cache.get("abc");
-        cache.remove("abc");
-        cache.get("abc");
-        cache.put("abc", "123");
-
-        assertMockEndpointsSatisfied();
-
-        List<Integer> eventTypes = receivedEventTypes("mock:test2");
-
-        assert_().that(eventTypes).containsExactly(EventType.EVT_CACHE_OBJECT_PUT, EventType.EVT_CACHE_OBJECT_PUT).inOrder();
     }
 
     @Test
@@ -117,26 +86,26 @@ public class IgniteEventsTest extends AbstractIgniteTest {
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("ignite-events:abc?events=EVT_CACHE_OBJECT_PUT").to("mock:test3");
+                from("ignite-events:" + resourceUid + "?events=EVT_CACHE_OBJECT_PUT").to("mock:test3");
             }
         });
 
         getMockEndpoint("mock:test3").expectedMessageCount(2);
 
-        IgniteCache<String, String> cache = ignite().getOrCreateCache("abc");
+        IgniteCache<String, String> cache = ignite().getOrCreateCache(resourceUid);
 
         // Generate cache activity.
-        cache.put("abc", "123");
-        cache.get("abc");
-        cache.remove("abc");
-        cache.get("abc");
-        cache.put("abc", "123");
+        cache.put(resourceUid, "123");
+        cache.get(resourceUid);
+        cache.remove(resourceUid);
+        cache.get(resourceUid);
+        cache.put(resourceUid, "123");
 
         assertMockEndpointsSatisfied();
 
         List<Integer> eventTypes = receivedEventTypes("mock:test3");
 
-        assert_().that(eventTypes).containsExactly(EventType.EVT_CACHE_OBJECT_PUT, EventType.EVT_CACHE_OBJECT_PUT).inOrder();
+        Assertions.assertThat(eventTypes).containsExactly(EventType.EVT_CACHE_OBJECT_PUT, EventType.EVT_CACHE_OBJECT_PUT);
 
     }
 

@@ -21,7 +21,6 @@ import java.io.IOException;
 import javax.xml.soap.SOAPException;
 
 import org.apache.camel.ContextTestSupport;
-import org.apache.camel.FailedToCreateRouteException;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.Test;
 
@@ -48,7 +47,7 @@ public class OnExceptionMisconfiguredTest extends ContextTestSupport {
         try {
             context.start();
             fail("Should have thrown exception");
-        } catch (FailedToCreateRouteException e) {
+        } catch (Exception e) {
             IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
             assertEquals("OnException[[java.lang.Exception] -> []] is not configured.", iae.getMessage());
         }
@@ -67,7 +66,7 @@ public class OnExceptionMisconfiguredTest extends ContextTestSupport {
         try {
             context.start();
             fail("Should have thrown exception");
-        } catch (FailedToCreateRouteException e) {
+        } catch (Exception e) {
             IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
             assertEquals("OnException[[java.lang.Exception] -> []] is not configured.", iae.getMessage());
         }
@@ -87,7 +86,7 @@ public class OnExceptionMisconfiguredTest extends ContextTestSupport {
         try {
             context.start();
             fail("Should have thrown exception");
-        } catch (FailedToCreateRouteException e) {
+        } catch (Exception e) {
             IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
             assertEquals("OnException[[java.lang.Exception] -> []] is not configured.", iae.getMessage());
         }
@@ -107,7 +106,7 @@ public class OnExceptionMisconfiguredTest extends ContextTestSupport {
         try {
             context.start();
             fail("Should have thrown exception");
-        } catch (FailedToCreateRouteException e) {
+        } catch (Exception e) {
             IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
             assertEquals("OnException[[java.lang.Exception] -> []] is not configured.", iae.getMessage());
         }
@@ -120,15 +119,13 @@ public class OnExceptionMisconfiguredTest extends ContextTestSupport {
             @SuppressWarnings("unchecked")
             public void configure() throws Exception {
 
-                from("direct:start")
-                    .onException().end()
-                    .to("mock:result");
+                from("direct:start").onException().end().to("mock:result");
             }
         });
         try {
             context.start();
             fail("Should have thrown exception");
-        } catch (FailedToCreateRouteException e) {
+        } catch (Exception e) {
             IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
             assertTrue(iae.getMessage().startsWith("At least one exception must be configured"));
         }
@@ -197,12 +194,7 @@ public class OnExceptionMisconfiguredTest extends ContextTestSupport {
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("direct:start")
-                    .onException(SOAPException.class)
-                    .onException(IOException.class)
-                        .to("mock:error")
-                    .end()
-                    .to("mock:result");
+                from("direct:start").onException(SOAPException.class).onException(IOException.class).to("mock:error").end().to("mock:result");
             }
         });
         context.start();

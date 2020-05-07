@@ -18,14 +18,13 @@ package org.apache.camel.component.sjms2;
 
 import org.apache.camel.AsyncEndpoint;
 import org.apache.camel.Component;
-import org.apache.camel.component.sjms.SjmsConsumer;
 import org.apache.camel.component.sjms.SjmsEndpoint;
 import org.apache.camel.component.sjms2.jms.Jms2ObjectFactory;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 
 /**
- * The sjms2 component (simple jms) allows messages to be sent to (or consumed from) a JMS Queue or Topic (uses JMS 2.x API).
+ * Send and receive messages to/from a JMS Queue or Topic using plain JMS 2.x API.
  *
  * This component uses plain JMS 2.x API where as the jms component uses Spring JMS.
  */

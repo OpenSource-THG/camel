@@ -26,6 +26,8 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Processor;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.spi.RestConsumerFactory;
+import org.apache.camel.support.DefaultConsumer;
+import org.apache.camel.support.service.ServiceHelper;
 
 /**
  * MultiRestConsumer allows to bind the webhook to multiple local rest endpoints.
@@ -34,24 +36,18 @@ import org.apache.camel.spi.RestConsumerFactory;
  * E.g. some webhook providers operate over POST but they do require that a specific endpoint replies also to
  * GET requests during handshake.
  */
-public class MultiRestConsumer implements Consumer {
-
-    private Endpoint endpoint;
-
-    private Processor processor;
+public class MultiRestConsumer extends DefaultConsumer {
 
     private List<Consumer> delegateConsumers;
 
     public MultiRestConsumer(CamelContext context, RestConsumerFactory factory, Endpoint endpoint, Processor processor,
                              List<String> methods, String url, String path, RestConfiguration config, ConsumerConfigurer configurer) throws Exception {
-        this.endpoint = endpoint;
-        this.processor = processor;
+        super(endpoint, processor);
         this.delegateConsumers = new ArrayList<>();
         for (String method : methods) {
             Consumer consumer = factory.createConsumer(context, processor, method, path,
                     null, null, null, config, Collections.emptyMap());
             configurer.configure(consumer);
-
 
             context.getRestRegistry().addRestService(consumer, url, url, path, null, method,
                     null, null, null, null, null, null);
@@ -61,27 +57,34 @@ public class MultiRestConsumer implements Consumer {
     }
 
     @Override
-    public Processor getProcessor() {
-        return processor;
-    }
-
-    @Override
-    public Endpoint getEndpoint() {
-        return endpoint;
-    }
-
-    @Override
-    public void start() throws Exception {
+    protected void doInit() {
         for (Consumer consumer : this.delegateConsumers) {
-            consumer.start();
+            consumer.init();
         }
     }
 
     @Override
-    public void stop() throws Exception {
+    public void doStart() throws Exception {
+        super.doStart();
         for (Consumer consumer : this.delegateConsumers) {
-            consumer.stop();
+            ServiceHelper.startService(consumer);
         }
+    }
+
+    @Override
+    public void doStop() throws Exception {
+        for (Consumer consumer : this.delegateConsumers) {
+            ServiceHelper.stopService(consumer);
+        }
+        super.doStop();
+    }
+
+    @Override
+    protected void doShutdown() throws Exception {
+        for (Consumer consumer : this.delegateConsumers) {
+            ServiceHelper.stopAndShutdownService(consumer);
+        }
+        super.doShutdown();
     }
 
     @FunctionalInterface

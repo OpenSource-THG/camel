@@ -20,9 +20,9 @@ import java.util.List;
 
 import org.apache.camel.Channel;
 import org.apache.camel.Route;
-import org.apache.camel.impl.EventDrivenConsumerRoute;
-import org.apache.camel.processor.DeadLetterChannel;
-import org.apache.camel.processor.RedeliveryPolicy;
+import org.apache.camel.impl.engine.DefaultRoute;
+import org.apache.camel.processor.errorhandler.DeadLetterChannel;
+import org.apache.camel.processor.errorhandler.RedeliveryPolicy;
 import org.apache.camel.spring.SpringCamelContext;
 import org.apache.camel.spring.SpringTestSupport;
 import org.junit.Test;
@@ -31,6 +31,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class ErrorHandlerTest extends SpringTestSupport {
 
+    @Override
     protected AbstractXmlApplicationContext createApplicationContext() {
         return new ClassPathXmlApplicationContext("org/apache/camel/spring/config/errorHandler.xml");
     }
@@ -41,7 +42,7 @@ public class ErrorHandlerTest extends SpringTestSupport {
         List<Route> list = context.getRoutes();
         assertEquals("Number routes created" + list, 2, list.size());
         for (Route route : list) {
-            EventDrivenConsumerRoute consumerRoute = assertIsInstanceOf(EventDrivenConsumerRoute.class, route);
+            DefaultRoute consumerRoute = assertIsInstanceOf(DefaultRoute.class, route);
             Channel channel = unwrapChannel(consumerRoute.getProcessor());
 
             DeadLetterChannel deadLetterChannel = assertIsInstanceOf(DeadLetterChannel.class, channel.getErrorHandler());

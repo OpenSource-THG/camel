@@ -27,7 +27,7 @@ import org.apache.camel.spi.UriPath;
 import org.openstack4j.core.transport.Config;
 
 /**
- * The openstack-cinder component allows messages to be sent to an OpenStack block storage services.
+ * Access data in OpenStack Cinder block storage.
  */
 @UriEndpoint(firstVersion = "2.19.0", scheme = "openstack-cinder", title = "OpenStack Cinder", syntax = "openstack-cinder:host", label = "cloud,paas", producerOnly = true)
 public class CinderEndpoint extends AbstractOpenstackEndpoint {
@@ -68,12 +68,12 @@ public class CinderEndpoint extends AbstractOpenstackEndpoint {
     @Override
     public Producer createProducer() throws Exception {
         switch (getSubsystem()) {
-        case CinderConstants.VOLUMES:
-            return new VolumeProducer(this, createClient());
-        case CinderConstants.SNAPSHOTS:
-            return new SnapshotProducer(this, createClient());
-        default:
-            throw new IllegalArgumentException("Can't create producer with subsystem " + subsystem);
+            case CinderConstants.VOLUMES:
+                return new VolumeProducer(this, createClient());
+            case CinderConstants.SNAPSHOTS:
+                return new SnapshotProducer(this, createClient());
+            default:
+                throw new IllegalArgumentException("Can't create producer with subsystem " + subsystem);
         }
     }
 
@@ -160,6 +160,7 @@ public class CinderEndpoint extends AbstractOpenstackEndpoint {
         this.host = host;
     }
 
+    @Override
     public Config getConfig() {
         return config;
     }
@@ -171,6 +172,7 @@ public class CinderEndpoint extends AbstractOpenstackEndpoint {
         this.config = config;
     }
 
+    @Override
     public String getApiVersion() {
         return apiVersion;
     }

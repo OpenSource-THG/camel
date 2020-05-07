@@ -16,31 +16,12 @@
  */
 package org.apache.camel;
 
-import java.util.List;
-
-import org.apache.camel.spi.InterceptStrategy;
-import org.apache.camel.spi.RouteContext;
-
 /**
  * Channel acts as a channel between {@link Processor}s in the route graph.
  * <p/>
  * The channel is responsible for routing the {@link Exchange} to the next {@link Processor} in the route graph.
  */
 public interface Channel extends AsyncProcessor, Navigate<Processor> {
-
-    /**
-     * Sets the processor that the channel should route the {@link Exchange} to.
-     *
-     * @param next  the next processor
-     */
-    void setNextProcessor(Processor next);
-
-    /**
-     * Sets the {@link org.apache.camel.processor.ErrorHandler} this Channel uses.
-     *
-     * @param errorHandler the error handler
-     */
-    void setErrorHandler(Processor errorHandler);
 
     /**
      * Gets the {@link org.apache.camel.processor.ErrorHandler} this Channel uses.
@@ -50,41 +31,11 @@ public interface Channel extends AsyncProcessor, Navigate<Processor> {
     Processor getErrorHandler();
 
     /**
-     * Adds a {@link org.apache.camel.spi.InterceptStrategy} to apply each {@link Exchange} before
-     * its routed to the next {@link Processor}.
-     *
-     * @param strategy  the intercept strategy
-     */
-    void addInterceptStrategy(InterceptStrategy strategy);
-
-    /**
-     * Adds a list of {@link org.apache.camel.spi.InterceptStrategy} to apply each {@link Exchange} before
-     * its routed to the next {@link Processor}.
-     *
-     * @param strategy  list of strategies
-     */
-    void addInterceptStrategies(List<InterceptStrategy> strategy);
-
-    /**
-     * Gets the list of {@link org.apache.camel.spi.InterceptStrategy} registered to this Channel.
-     *
-     * @return list of strategies, returns an empty list if no strategies is registered.
-     */
-    List<InterceptStrategy> getInterceptStrategies();
-
-    /**
      * Gets the wrapped output that at runtime should be delegated to.
      *
      * @return the output to route the {@link Exchange} to
      */
     Processor getOutput();
-
-    /**
-     * Sets the wrapped output that at runtime should be delegated to.
-     *
-     * @param output the output to route the {@link Exchange} to
-     */
-    void setOutput(Processor output);
 
     /**
      * Gets the next {@link Processor} to route to (not wrapped)
@@ -94,9 +45,17 @@ public interface Channel extends AsyncProcessor, Navigate<Processor> {
     Processor getNextProcessor();
 
     /**
-     * Gets the {@link RouteContext}
+     * Gets the {@link Route}
      *
      * @return the route context
      */
-    RouteContext getRouteContext();
+    Route getRoute();
+
+    /**
+     * Gets the definition of the next processor
+     *
+     * @return the processor definition
+     */
+    NamedNode getProcessorDefinition();
+
 }

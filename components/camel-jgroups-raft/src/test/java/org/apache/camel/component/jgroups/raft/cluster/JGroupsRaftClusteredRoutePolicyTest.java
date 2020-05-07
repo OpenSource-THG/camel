@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 
-public class JGroupsRaftClusteredRoutePolicyTest extends JGroupsRaftClusterAbastractTest {
+public class JGroupsRaftClusteredRoutePolicyTest extends JGroupsRaftClusterAbstractTest {
     private static final Logger LOG = LoggerFactory.getLogger(JGroupsRaftClusteredRoutePolicyTest.class);
 
     private ArrayList<CamelContext> lcc = new ArrayList<>();
@@ -92,7 +92,7 @@ public class JGroupsRaftClusteredRoutePolicyTest extends JGroupsRaftClusterAbast
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("timer:master?delay=1s&period=1s")
+                from("timer:master?delay=1000&period=1000")
                         .routeId("route-" + id)
                         .routePolicy(ClusteredRoutePolicy.forNamespace("jgr"))
                         .log("From ${routeId}");

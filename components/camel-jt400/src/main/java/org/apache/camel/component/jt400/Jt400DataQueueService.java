@@ -16,10 +16,13 @@
  */
 package org.apache.camel.component.jt400;
 
+import java.io.IOException;
+
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.BaseDataQueue;
 import com.ibm.as400.access.DataQueue;
 import com.ibm.as400.access.KeyedDataQueue;
+import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.Service;
 import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
@@ -58,7 +61,7 @@ class Jt400DataQueueService implements Service {
     }
 
     @Override
-    public void start() throws Exception {
+    public void start() {
         if (queue == null) {
             AS400 system = endpoint.getSystem();
             if (endpoint.isKeyed()) {
@@ -68,15 +71,19 @@ class Jt400DataQueueService implements Service {
             }
         }
         if (!queue.getSystem().isConnected(AS400.DATAQUEUE)) {
-            LOG.info("Connecting to {}", endpoint);
-            queue.getSystem().connectService(AS400.DATAQUEUE);
+            LOG.debug("Connecting to {}", endpoint);
+            try {
+                queue.getSystem().connectService(AS400.DATAQUEUE);
+            } catch (Exception e) {
+                throw RuntimeCamelException.wrapRuntimeCamelException(e);
+            }
         }
     }
 
     @Override
-    public void stop() throws Exception {
+    public void stop() {
         if (queue != null) {
-            LOG.info("Releasing connection to {}", endpoint);
+            LOG.debug("Releasing connection to {}", endpoint);
             AS400 system = queue.getSystem();
             queue = null;
             endpoint.releaseSystem(system);
@@ -94,4 +101,8 @@ class Jt400DataQueueService implements Service {
         return queue;
     }
 
+    @Override
+    public void close() throws IOException {
+        stop();
+    }
 }

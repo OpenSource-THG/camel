@@ -17,11 +17,17 @@
 package org.apache.camel.component.undertow;
 
 import java.net.URI;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ServiceLoader;
+
 import javax.net.ssl.SSLContext;
 
 import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.accesslog.AccessLogReceiver;
 import org.apache.camel.AsyncEndpoint;
 import org.apache.camel.Consumer;
 import org.apache.camel.Exchange;
@@ -34,7 +40,8 @@ import org.apache.camel.cloud.DiscoverableService;
 import org.apache.camel.cloud.ServiceDefinition;
 import org.apache.camel.component.undertow.UndertowConstants.EventType;
 import org.apache.camel.component.undertow.handlers.CamelWebSocketHandler;
-import org.apache.camel.http.common.cookie.CookieHandler;
+import org.apache.camel.component.undertow.spi.UndertowSecurityProvider;
+import org.apache.camel.http.base.cookie.CookieHandler;
 import org.apache.camel.spi.HeaderFilterStrategy;
 import org.apache.camel.spi.HeaderFilterStrategyAware;
 import org.apache.camel.spi.Metadata;
@@ -44,16 +51,20 @@ import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.CollectionHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnio.Option;
 import org.xnio.OptionMap;
 import org.xnio.Options;
 
 /**
- * The undertow component provides HTTP and WebSocket based endpoints for consuming and producing HTTP/WebSocket requests.
+ * Expose HTTP and WebSocket endpoints and access external HTTP/WebSocket servers.
  */
 @UriEndpoint(firstVersion = "2.16.0", scheme = "undertow", title = "Undertow", syntax = "undertow:httpURI",
         label = "http,websocket", lenientProperties = true)
 public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, HeaderFilterStrategyAware, DiscoverableService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(UndertowEndpoint.class);
 
     private UndertowComponent component;
     private SSLContext sslContext;
@@ -64,8 +75,12 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
 
     @UriPath @Metadata(required = true)
     private URI httpURI;
+    @UriParam(label = "common", defaultValue = "false")
+    private boolean useStreaming;
     @UriParam(label = "advanced")
     private UndertowHttpBinding undertowHttpBinding;
+    @UriParam(label = "advanced")
+    private AccessLogReceiver accessLogReceiver;
     @UriParam(label = "advanced")
     private HeaderFilterStrategy headerFilterStrategy = new UndertowHeaderFilterStrategy();
     @UriParam(label = "security")
@@ -74,10 +89,14 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
     private String httpMethodRestrict;
     @UriParam(label = "consumer", defaultValue = "false")
     private Boolean matchOnUriPrefix = Boolean.FALSE;
+    @UriParam(label = "consumer", defaultValue = "false")
+    private Boolean accessLog = Boolean.FALSE;
     @UriParam(label = "producer", defaultValue = "true")
     private Boolean throwExceptionOnFailure = Boolean.TRUE;
     @UriParam(label = "producer", defaultValue = "false")
     private Boolean transferException = Boolean.FALSE;
+    @UriParam(label = "consumer", defaultValue = "false")
+    private Boolean muteException = Boolean.FALSE;
     @UriParam(label = "producer", defaultValue = "true")
     private Boolean keepAlive = Boolean.TRUE;
     @UriParam(label = "producer", defaultValue = "true")
@@ -95,9 +114,28 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
     @UriParam(label = "producer,websocket", defaultValue = "30000")
     private Integer sendTimeout = 30000;
     @UriParam(label = "consumer,websocket", defaultValue = "false")
-    private boolean useStreaming;
-    @UriParam(label = "consumer,websocket", defaultValue = "false")
     private boolean fireWebSocketChannelEvents;
+    @UriParam(label = "consumer,advanced",
+        description = "Specifies a comma-delimited set of io.undertow.server.HttpHandler instances to lookup in"
+        + " your Registry. These handlers are added to the Undertow handler chain (for example, to add security)."
+        + " Important: You can not use different handlers with different Undertow endpoints using the same port number."
+        + " The handlers is associated to the port number. If you need different handlers, then use different port numbers.")
+    private String handlers;
+    @UriParam(
+            label = "producer", defaultValue = "true",
+            description = "If the option is true, UndertowProducer will set the Host header to the value contained in the current exchange Host header,"
+            + " useful in reverse proxy applications where you want the Host header received by the downstream server to reflect the URL called by the upstream client,"
+            + " this allows applications which use the Host header to generate accurate URL's for a proxied service."
+    )
+    private boolean preserveHostHeader = true;
+    @UriParam(label = "security", description = "OConfiguration used by UndertowSecurityProvider. Security configuration object for use "
+            + "from UndertowSecurityProvider. Configuration is UndertowSecurityProvider specific. Each provider decides whether accepts configuration.")
+    private Object securityConfiguration;
+    @UriParam(label = "security", description = "Configuration used by UndertowSecurityProvider. Comma separated list of allowed roles.")
+    private String allowedRoles;
+    @UriParam(label = "security", description = "Security provider allows plug in the provider, which will be used to secure requests. "
+            + "SPI approach could be used too (endpoint then finds security provider using SPI).")
+    private UndertowSecurityProvider securityProvider;
 
     public UndertowEndpoint(String uri, UndertowComponent component) {
         super(uri, component);
@@ -107,6 +145,14 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
     @Override
     public UndertowComponent getComponent() {
         return component;
+    }
+
+    public UndertowSecurityProvider getSecurityProvider() {
+        return this.securityProvider;
+    }
+
+    public void setSecurityProvider(UndertowSecurityProvider securityProvider) {
+        this.securityProvider = securityProvider;
     }
 
     @Override
@@ -147,6 +193,11 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
 
         Message in = getUndertowHttpBinding().toCamelMessage(httpExchange, exchange);
 
+        //securityProvider could add its own header into result exchange
+        if (getSecurityProvider() != null) {
+            getSecurityProvider().addHeader((key, value) -> in.setHeader(key, value), httpExchange);
+        }
+
         exchange.setProperty(Exchange.CHARSET_NAME, httpExchange.getRequestCharset());
         in.setHeader(Exchange.HTTP_CHARACTER_ENCODING, httpExchange.getRequestCharset());
 
@@ -184,6 +235,10 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
         return matchOnUriPrefix;
     }
 
+    public boolean isMatchOnUriPrefix() {
+        return matchOnUriPrefix != null && matchOnUriPrefix;
+    }
+
     /**
      * Whether or not the consumer should try to find a target consumer by matching the URI prefix if no exact match is found.
      */
@@ -191,6 +246,7 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
         this.matchOnUriPrefix = matchOnUriPrefix;
     }
 
+    @Override
     public HeaderFilterStrategy getHeaderFilterStrategy() {
         return headerFilterStrategy;
     }
@@ -198,6 +254,7 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
     /**
      * To use a custom HeaderFilterStrategy to filter header to and from Camel message.
      */
+    @Override
     public void setHeaderFilterStrategy(HeaderFilterStrategy headerFilterStrategy) {
         this.headerFilterStrategy = headerFilterStrategy;
     }
@@ -230,23 +287,35 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
     }
 
     /**
-     * If enabled and an Exchange failed processing on the consumer side and if the caused Exception 
-     * was send back serialized in the response as a application/x-java-serialized-object content type. 
-     * On the producer side the exception will be deserialized and thrown as is instead of the HttpOperationFailedException. The caused exception is required to be serialized. 
-     * This is by default turned off. If you enable this 
+     * If enabled and an Exchange failed processing on the consumer side and if the caused Exception
+     * was send back serialized in the response as a application/x-java-serialized-object content type.
+     * On the producer side the exception will be deserialized and thrown as is instead of the HttpOperationFailedException. The caused exception is required to be serialized.
+     * This is by default turned off. If you enable this
      * then be aware that Java will deserialize the incoming data from the request to Java and that can be a potential security risk.
-     * 
+     *
      */
     public void setTransferException(Boolean transferException) {
         this.transferException = transferException;
     }
 
+    public Boolean getMuteException() {
+        return muteException;
+    }
+
+    /**
+     * If enabled and an Exchange failed processing on the consumer side the response's body won't contain the exception's stack trace.
+     */
+    public void setMuteException(Boolean muteException) {
+        this.muteException = muteException;
+    }
+
     public UndertowHttpBinding getUndertowHttpBinding() {
         if (undertowHttpBinding == null) {
             // create a new binding and use the options from this endpoint
-            undertowHttpBinding = new DefaultUndertowHttpBinding();
+            undertowHttpBinding = new DefaultUndertowHttpBinding(useStreaming);
             undertowHttpBinding.setHeaderFilterStrategy(getHeaderFilterStrategy());
             undertowHttpBinding.setTransferException(getTransferException());
+            undertowHttpBinding.setMuteException(getMuteException());
         }
         return undertowHttpBinding;
     }
@@ -354,9 +423,18 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
     }
 
     /**
-     * if {@code true}, text and binary messages coming through a WebSocket will be wrapped as java.io.Reader and
-     * java.io.InputStream respectively before they are passed to an {@link Exchange}; otherwise they will be passed as
-     * String and byte[] respectively.
+     * <p>
+     * For HTTP endpoint:
+     * if {@code true}, text and binary messages will be wrapped as {@link java.io.InputStream}
+     * before they are passed to an {@link Exchange}; otherwise they will be passed as byte[].
+     * </p>
+     *
+     * <p>
+     * For WebSocket endpoint:
+     * if {@code true}, text and binary messages will be wrapped as {@link java.io.Reader} and
+     * {@link java.io.InputStream} respectively before they are passed to an {@link Exchange};
+     * otherwise they will be passed as String and byte[] respectively.
+     * </p>
      */
     public void setUseStreaming(boolean useStreaming) {
         this.useStreaming = useStreaming;
@@ -373,10 +451,36 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
     public void setFireWebSocketChannelEvents(boolean fireWebSocketChannelEvents) {
         this.fireWebSocketChannelEvents = fireWebSocketChannelEvents;
     }
+    public void setPreserveHostHeader(boolean preserveHostHeader) {
+        this.preserveHostHeader = preserveHostHeader;
+    }
+    public boolean isPreserveHostHeader() {
+        return preserveHostHeader;
+    }
+
+    public Object getSecurityConfiguration() {
+        return this.securityConfiguration;
+    }
+
+    public void setSecurityConfiguration(Object securityConfiguration) {
+        this.securityConfiguration = securityConfiguration;
+    }
+
+    public String getAllowedRoles() {
+        return allowedRoles;
+    }
+
+    public void setAllowedRoles(String allowedRoles) {
+        this.allowedRoles = allowedRoles;
+    }
 
     @Override
     protected void doStart() throws Exception {
         super.doStart();
+
+        if (this.securityProvider == null) {
+            initSecurityProvider();
+        }
 
         final String scheme = httpURI.getScheme();
         this.isWebSocket = UndertowConstants.WS_PROTOCOL.equalsIgnoreCase(scheme) || UndertowConstants.WSS_PROTOCOL.equalsIgnoreCase(scheme);
@@ -405,7 +509,7 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
                     key = Options.class.getName() + "." + key;
                     Option option = Option.fromString(key, cl);
                     value = option.parseValue(value.toString(), cl);
-                    log.trace("Parsed option {}={}", option.getName(), value);
+                    LOG.trace("Parsed option {}={}", option.getName(), value);
                     builder.set(option, value);
                 }
             }
@@ -436,6 +540,32 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
         }
     }
 
+    private void initSecurityProvider() throws Exception {
+        Object securityConfiguration = getSecurityConfiguration();
+        if (securityConfiguration != null) {
+            ServiceLoader<UndertowSecurityProvider> securityProvider = ServiceLoader.load(UndertowSecurityProvider.class);
+
+            Iterator<UndertowSecurityProvider> iter = securityProvider.iterator();
+            List<String> providers = new LinkedList();
+            while (iter.hasNext()) {
+                UndertowSecurityProvider security =  iter.next();
+                //only securityProvider, who accepts security configuration, could be used
+                if (security.acceptConfiguration(securityConfiguration, getEndpointUri())) {
+                    this.securityProvider = security;
+                    LOG.info("Security provider found {}", securityProvider.getClass().getName());
+                    break;
+                }
+                providers.add(security.getClass().getName());
+            }
+            if (this.securityProvider == null) {
+                LOG.info("Security provider for configuration {} not found {}", securityConfiguration, providers);
+            }
+        }
+        if (this.securityProvider == null) {
+            this.securityProvider = getComponent().getSecurityProvider();
+        }
+    }
+
     /**
      * @return {@code true} if {@link #getHttpURI()}'s scheme is {@code ws} or {@code wss}
      */
@@ -455,6 +585,43 @@ public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
             webSocketHttpHandler = new CamelWebSocketHandler();
         }
         return webSocketHttpHandler;
+    }
+
+    public Boolean getAccessLog() {
+        return accessLog;
+    }
+
+    /**
+     * Whether or not the consumer should write access log
+     */
+    public void setAccessLog(Boolean accessLog) {
+        this.accessLog = accessLog;
+    }
+
+    public AccessLogReceiver getAccessLogReceiver() {
+        return accessLogReceiver;
+    }
+
+    /**
+     * Which Undertow AccessLogReciever should be used
+     * Will use JBossLoggingAccessLogReceiver if not specifid
+     */
+    public void setAccessLogReceiver(AccessLogReceiver accessLogReceiver) {
+        this.accessLogReceiver = accessLogReceiver;
+    }
+
+    public String getHandlers() {
+        return handlers;
+    }
+
+    /**
+     * Specifies a comma-delimited set of io.undertow.server.HttpHandler instances in your Registry (such as your Spring ApplicationContext).
+     * These handlers are added to the Undertow handler chain (for example, to add security).
+     * Important: You can not use different handlers with different Undertow endpoints using the same port number.
+     * The handlers is associated to the port number. If you need different handlers, then use different port numbers.
+     */
+    public void setHandlers(String handlers) {
+        this.handlers = handlers;
     }
 
 }

@@ -18,8 +18,10 @@ package org.apache.camel.impl;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Producer;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.impl.engine.InterceptSendToMockEndpointStrategy;
 import org.junit.Test;
 
 public class InterceptSendToMockEndpointStrategyCustomTest extends ContextTestSupport {
@@ -37,7 +39,7 @@ public class InterceptSendToMockEndpointStrategyCustomTest extends ContextTestSu
 
     @Test
     public void testAdvisedMockEndpoints() throws Exception {
-        context.addRegisterEndpointCallback(new MyStrategy());
+        context.adapt(ExtendedCamelContext.class).registerEndpointCallback(new MyStrategy());
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() throws Exception {

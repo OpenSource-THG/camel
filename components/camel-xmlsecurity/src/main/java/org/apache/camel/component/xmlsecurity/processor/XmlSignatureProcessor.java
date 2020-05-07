@@ -27,7 +27,8 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.xml.sax.SAXException;
-import org.apache.camel.BytesSource;
+
+import org.apache.camel.CamelContext;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.component.validator.DefaultLSResourceResolver;
@@ -36,6 +37,7 @@ import org.apache.camel.component.xmlsecurity.api.XmlSignatureException;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
+import org.apache.camel.util.xml.BytesSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,10 +49,20 @@ public abstract class XmlSignatureProcessor implements Processor {
         try {
             SantuarioUtil.initializeSantuario();
             SantuarioUtil.addSantuarioJSR105Provider();
-        } catch (Throwable t) { //NOPMD
+        } catch (Throwable t) {
             // provider not in classpath, ignore and fall back to jre default
             LOG.info("Cannot add the SantuarioJSR105Provider due to {0}, fall back to JRE default.", t);
         }
+    }
+
+    protected final CamelContext context;
+
+    public XmlSignatureProcessor(CamelContext context) {
+        this.context = context;
+    }
+
+    public CamelContext getCamelContext() {
+        return context;
     }
 
     public abstract XmlSignatureConfiguration getConfiguration();
@@ -101,7 +113,7 @@ public abstract class XmlSignatureProcessor implements Processor {
         if (schemaResourceUri == null || schemaResourceUri.isEmpty()) {
             return null;
         }
-        InputStream is = ResourceHelper.resolveResourceAsInputStream(getConfiguration().getCamelContext().getClassResolver(),
+        InputStream is = ResourceHelper.resolveResourceAsInputStream(getCamelContext().getClassResolver(),
                 schemaResourceUri);
         if (is == null) {
             throw new XmlSignatureException(
@@ -117,7 +129,7 @@ public abstract class XmlSignatureProcessor implements Processor {
         }
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         schemaFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        schemaFactory.setResourceResolver(new DefaultLSResourceResolver(getConfiguration().getCamelContext(), getConfiguration()
+        schemaFactory.setResourceResolver(new DefaultLSResourceResolver(getCamelContext(), getConfiguration()
                 .getSchemaResourceUri()));
         LOG.debug("Instantiating schema for validation");
         return schemaFactory.newSchema(new BytesSource(bytes));

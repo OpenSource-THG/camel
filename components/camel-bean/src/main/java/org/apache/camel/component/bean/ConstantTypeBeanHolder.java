@@ -17,6 +17,7 @@
 package org.apache.camel.component.bean;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.util.ObjectHelper;
 
@@ -27,6 +28,10 @@ public class ConstantTypeBeanHolder implements BeanTypeHolder {
     private final Class<?> type;
     private final BeanInfo beanInfo;
 
+    public ConstantTypeBeanHolder(Class<?> type, CamelContext context) {
+        this(type, new BeanInfo(context, type));
+    }
+
     public ConstantTypeBeanHolder(Class<?> type, BeanInfo beanInfo) {
         ObjectHelper.notNull(type, "type");
         ObjectHelper.notNull(beanInfo, "beanInfo");
@@ -35,21 +40,13 @@ public class ConstantTypeBeanHolder implements BeanTypeHolder {
         this.beanInfo = beanInfo;
     }
 
-    public ConstantTypeBeanHolder(Class<?> type, CamelContext context) {
-        this(type, new BeanInfo(context, type));
-    }
-
-    public ConstantTypeBeanHolder(Class<?> type, CamelContext context, ParameterMappingStrategy parameterMappingStrategy) {
-        this(type, new BeanInfo(context, type, parameterMappingStrategy));
-    }
-
     /**
      * Creates a cached and constant {@link org.apache.camel.component.bean.BeanHolder} from this holder.
      *
      * @return a new {@link org.apache.camel.component.bean.BeanHolder} that has cached the lookup of the bean.
      */
     public ConstantBeanHolder createCacheHolder() throws Exception {
-        Object bean = getBean();
+        Object bean = getBean(null);
         return new ConstantBeanHolder(bean, beanInfo);
     }
 
@@ -58,31 +55,37 @@ public class ConstantTypeBeanHolder implements BeanTypeHolder {
         return type.toString();
     }
 
-    public Object getBean()  {
-        // only create a bean if we have constructors
-        if (beanInfo.hasPublicConstructors()) {
-            return getBeanInfo().getCamelContext().getInjector().newInstance(type);
+    @Override
+    public Object getBean(Exchange exchange)  {
+        // only create a bean if we have a default no-arg constructor
+        if (beanInfo.hasPublicNoArgConstructors()) {
+            return getBeanInfo().getCamelContext().getInjector().newInstance(type, false);
         } else {
             return null;
         }
     }
 
+    @Override
     public Processor getProcessor() {
         return null;
     }
 
+    @Override
     public boolean supportProcessor() {
         return false;
     }
 
+    @Override
     public BeanInfo getBeanInfo() {
         return beanInfo;
     }
 
+    @Override
     public BeanInfo getBeanInfo(Object bean) {
         return null;
     }
 
+    @Override
     public Class<?> getType() {
         return type;
     }

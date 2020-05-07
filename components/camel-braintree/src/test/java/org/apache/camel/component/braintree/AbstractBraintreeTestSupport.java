@@ -29,7 +29,7 @@ import org.apache.camel.component.braintree.internal.BraintreeApiCollection;
 import org.apache.camel.component.braintree.internal.BraintreeApiName;
 import org.apache.camel.component.braintree.internal.BraintreeConstants;
 import org.apache.camel.component.braintree.internal.BraintreeLogHandler;
-import org.apache.camel.support.IntrospectionSupport;
+import org.apache.camel.support.PropertyBindingSupport;
 import org.apache.camel.support.component.ApiMethod;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.apache.camel.util.ObjectHelper;
@@ -59,7 +59,7 @@ public class AbstractBraintreeTestSupport extends CamelTestSupport {
 
         // add BraintreeComponent to Camel context
         final BraintreeComponent component = new BraintreeComponent(context);
-        component.setConfiguration(buildBraintreeConfiguration());
+        component.setConfiguration(buildBraintreeConfiguration(context));
         context.addComponent("braintree", component);
 
         return context;
@@ -74,7 +74,7 @@ public class AbstractBraintreeTestSupport extends CamelTestSupport {
         }
     }
 
-    protected BraintreeConfiguration buildBraintreeConfiguration() throws Exception {
+    protected BraintreeConfiguration buildBraintreeConfiguration(CamelContext context) throws Exception {
 
         final Properties properties = new Properties();
         try {
@@ -91,29 +91,29 @@ public class AbstractBraintreeTestSupport extends CamelTestSupport {
         AuthenticationType configurationType = getAuthenticationType();
         LOG.info(String.format("Test using %s configuration profile", configurationType));
         switch (configurationType) {
-        case PUBLIC_PRIVATE_KEYS:
-            addOptionIfMissing(options, "environment", "CAMEL_BRAINTREE_ENVIRONMENT");
-            addOptionIfMissing(options, "merchantId", "CAMEL_BRAINTREE_MERCHANT_ID");
-            addOptionIfMissing(options, "publicKey", "CAMEL_BRAINTREE_PUBLIC_KEY");
-            addOptionIfMissing(options, "privateKey", "CAMEL_BRAINTREE_PRIVATE_KEY");
-            options.remove("accessToken");
-            options.remove("clientId");
-            break;
-        case ACCESS_TOKEN:
-            addOptionIfMissing(options, "accessToken", "CAMEL_BRAINTREE_ACCESS_TOKEN");
-            options.remove("environment");
-            options.remove("merchantId");
-            options.remove("publicKey");
-            options.remove("privateKey");
-            break;
-        default:
-            throw new IllegalArgumentException("Unsupported configuration type");
+            case PUBLIC_PRIVATE_KEYS:
+                addOptionIfMissing(options, "environment", "CAMEL_BRAINTREE_ENVIRONMENT");
+                addOptionIfMissing(options, "merchantId", "CAMEL_BRAINTREE_MERCHANT_ID");
+                addOptionIfMissing(options, "publicKey", "CAMEL_BRAINTREE_PUBLIC_KEY");
+                addOptionIfMissing(options, "privateKey", "CAMEL_BRAINTREE_PRIVATE_KEY");
+                options.remove("accessToken");
+                options.remove("clientId");
+                break;
+            case ACCESS_TOKEN:
+                addOptionIfMissing(options, "accessToken", "CAMEL_BRAINTREE_ACCESS_TOKEN");
+                options.remove("environment");
+                options.remove("merchantId");
+                options.remove("publicKey");
+                options.remove("privateKey");
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported configuration type");
         }
 
         final BraintreeConfiguration configuration = new BraintreeConfiguration();
         configuration.setHttpLogLevel(BraintreeLogHandler.DEFAULT_LOGGER_VERSION);
         configuration.setHttpLogName(BraintreeLogHandler.DEFAULT_LOGGER_NAME);
-        IntrospectionSupport.setProperties(configuration, options);
+        PropertyBindingSupport.bindProperties(context, configuration, options);
 
         return configuration;
     }

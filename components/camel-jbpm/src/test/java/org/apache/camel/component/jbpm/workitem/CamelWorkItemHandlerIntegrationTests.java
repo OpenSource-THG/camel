@@ -39,10 +39,10 @@ import static org.hamcrest.CoreMatchers.*;
 //http://camel.apache.org/async.html
 public class CamelWorkItemHandlerIntegrationTests extends CamelTestSupport {
 
-    @EndpointInject(uri = "mock:result")
+    @EndpointInject("mock:result")
     protected MockEndpoint resultEndpoint;
 
-    @Produce(uri = "direct:start")
+    @Produce("direct:start")
     protected ProducerTemplate template;
 
     @Test
@@ -264,7 +264,7 @@ public class CamelWorkItemHandlerIntegrationTests extends CamelTestSupport {
                             
                                 @Override
                                 public void process(Exchange exchange) throws Exception {
-                                    RuntimeCamelException exceptionWrapper = new RuntimeCamelException(exchange.EXCEPTION_CAUGHT);        
+                                    RuntimeCamelException exceptionWrapper = new RuntimeCamelException(Exchange.EXCEPTION_CAUGHT);        
                                     throw exceptionWrapper;
                                 }
                             })

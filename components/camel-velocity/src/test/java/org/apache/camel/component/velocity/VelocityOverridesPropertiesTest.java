@@ -35,10 +35,11 @@ public class VelocityOverridesPropertiesTest extends CamelTestSupport {
             }
         });
 
-        assertEquals("Dear Christian. You ordered item 7 on Monday.", exchange.getOut().getBody());
-        assertEquals("Christian", exchange.getOut().getHeader("name"));
+        assertEquals("Dear Christian. You ordered item 7 on Monday.", exchange.getMessage().getBody());
+        assertEquals("Christian", exchange.getMessage().getHeader("name"));
     }
 
+    @Override
     protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() throws Exception {

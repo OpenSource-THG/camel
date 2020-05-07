@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.language.xpath.DefaultNamespaceContext;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.support.builder.xml.Namespaces;
+import org.apache.camel.support.builder.Namespaces;
 import org.junit.Test;
 
 public class DefaultNamespaceContextTest extends ContextTestSupport {
@@ -117,7 +117,7 @@ public class DefaultNamespaceContextTest extends ContextTestSupport {
     @Test
     public void testDefaultNamespaceContextCtr() throws Exception {
         DefaultNamespaceContext context = new DefaultNamespaceContext();
-        
+
         // should not have any namespaces
         String uri = context.getNamespaceURI("in");
         assertEquals(null, uri);

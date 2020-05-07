@@ -16,7 +16,6 @@
  */
 package org.apache.camel.dataformat.bindy.fixed.converter;
 
-
 import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
@@ -51,22 +50,22 @@ public class BindyConverterTest extends CamelTestSupport {
     //
     // *************************************************************************
 
-    @Produce(uri = URI_DIRECT_MARSHALL)
+    @Produce(URI_DIRECT_MARSHALL)
     private ProducerTemplate mtemplate;
 
-    @EndpointInject(uri = URI_MOCK_MARSHALL_RESULT)
+    @EndpointInject(URI_MOCK_MARSHALL_RESULT)
     private MockEndpoint mresult;
 
-    @Produce(uri = URI_DIRECT_UNMARSHALL)
+    @Produce(URI_DIRECT_UNMARSHALL)
     private ProducerTemplate utemplate;
 
-    @EndpointInject(uri = URI_MOCK_UNMARSHALL_RESULT)
+    @EndpointInject(URI_MOCK_UNMARSHALL_RESULT)
     private MockEndpoint uresult;
 
-    @Produce(uri = URI_DIRECT_THROUGH)
+    @Produce(URI_DIRECT_THROUGH)
     private ProducerTemplate ttemplate;
 
-    @EndpointInject(uri = URI_MOCK_THROUGH)
+    @EndpointInject(URI_MOCK_THROUGH)
     private MockEndpoint tresult;
 
     // *************************************************************************
@@ -191,9 +190,9 @@ public class BindyConverterTest extends CamelTestSupport {
         RouteBuilder routeBuilder = new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                BindyDataFormat bindy = new BindyDataFormat();
-                bindy.setClassType(DataModel.class);
-                bindy.setType(BindyType.Fixed);
+                BindyDataFormat bindy = new BindyDataFormat()
+                        .classType(DataModel.class)
+                        .type(BindyType.Fixed);
 
                 from(URI_DIRECT_MARSHALL)
                     .marshal(bindy)
@@ -202,9 +201,9 @@ public class BindyConverterTest extends CamelTestSupport {
                     .unmarshal().bindy(BindyType.Fixed, DataModel.class)
                     .to(URI_MOCK_UNMARSHALL_RESULT);
 
-                BindyDataFormat bindy2 = new BindyDataFormat();
-                bindy2.setClassType(AllCombinations.class);
-                bindy2.setType(BindyType.Fixed);
+                BindyDataFormat bindy2 = new BindyDataFormat()
+                        .classType(AllCombinations.class)
+                        .type(BindyType.Fixed);
                 from(URI_DIRECT_THROUGH)
                         .marshal(bindy2)
                         .unmarshal().bindy(BindyType.Fixed, AllCombinations.class)

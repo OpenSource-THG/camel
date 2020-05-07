@@ -44,7 +44,7 @@ import org.apache.camel.support.component.ApiMethod;
 import org.apache.camel.support.component.ApiMethodPropertiesHelper;
 
 /**
- * For uploading downloading and managing files folders groups collaborations etc on box DOT com.
+ * Upload, download and manage files, folders, groups, collaborations, etc. on box.com.
  */
 @UriEndpoint(firstVersion = "2.14.0", scheme = "box", title = "Box", syntax = "box:apiName/methodName",
     consumerPrefix = "consumer", label = "api,file,cloud", lenientProperties = true)
@@ -79,10 +79,12 @@ public class BoxEndpoint extends AbstractApiEndpoint<BoxApiName, BoxConfiguratio
         return boxConnection;
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         return new BoxProducer(this);
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         // make sure inBody is not set for consumers
         if (inBody != null) {
@@ -99,6 +101,7 @@ public class BoxEndpoint extends AbstractApiEndpoint<BoxApiName, BoxConfiguratio
         return BoxPropertiesHelper.getHelper();
     }
 
+    @Override
     protected String getThreadProfileName() {
         return BoxConstants.THREAD_PROFILE_NAME;
     }
@@ -132,38 +135,38 @@ public class BoxEndpoint extends AbstractApiEndpoint<BoxApiName, BoxConfiguratio
 
     private void createApiProxy(Map<String, Object> args) {
         switch (apiName) {
-        case COLLABORATIONS:
-            apiProxy = new BoxCollaborationsManager(getBoxConnection());
-            break;
-        case COMMENTS:
-            apiProxy = new BoxCommentsManager(getBoxConnection());
-            break;
-        case EVENT_LOGS:
-            apiProxy = new BoxEventLogsManager(getBoxConnection());
-            break;
-        case EVENTS:
-            apiProxy = new BoxEventsManager(getBoxConnection());
-            break;
-        case FILES:
-            apiProxy = new BoxFilesManager(getBoxConnection());
-            break;
-        case FOLDERS:
-            apiProxy = new BoxFoldersManager(getBoxConnection());
-            break;
-        case GROUPS:
-            apiProxy = new BoxGroupsManager(getBoxConnection());
-            break;
-        case SEARCH:
-            apiProxy = new BoxSearchManager(getBoxConnection());
-            break;
-        case TASKS:
-            apiProxy = new BoxTasksManager(getBoxConnection());
-            break;
-        case USERS:
-            apiProxy = new BoxUsersManager(getBoxConnection());
-            break;
-        default:
-            throw new IllegalArgumentException("Invalid API name " + apiName);
+            case COLLABORATIONS:
+                apiProxy = new BoxCollaborationsManager(getBoxConnection());
+                break;
+            case COMMENTS:
+                apiProxy = new BoxCommentsManager(getBoxConnection());
+                break;
+            case EVENT_LOGS:
+                apiProxy = new BoxEventLogsManager(getBoxConnection());
+                break;
+            case EVENTS:
+                apiProxy = new BoxEventsManager(getBoxConnection());
+                break;
+            case FILES:
+                apiProxy = new BoxFilesManager(getBoxConnection());
+                break;
+            case FOLDERS:
+                apiProxy = new BoxFoldersManager(getBoxConnection());
+                break;
+            case GROUPS:
+                apiProxy = new BoxGroupsManager(getBoxConnection());
+                break;
+            case SEARCH:
+                apiProxy = new BoxSearchManager(getBoxConnection());
+                break;
+            case TASKS:
+                apiProxy = new BoxTasksManager(getBoxConnection());
+                break;
+            case USERS:
+                apiProxy = new BoxUsersManager(getBoxConnection());
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid API name " + apiName);
         }
     }
 }

@@ -17,6 +17,7 @@
 package org.apache.camel.component.bean;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.util.ObjectHelper;
@@ -44,23 +45,18 @@ public class ConstantBeanHolder implements BeanHolder {
         this.beanInfo = new BeanInfo(context, bean.getClass());
     }
 
-    public ConstantBeanHolder(Object bean, CamelContext context, ParameterMappingStrategy parameterMappingStrategy) {
-        ObjectHelper.notNull(bean, "bean");
-
-        this.bean = bean;
-        this.beanInfo = new BeanInfo(context, bean.getClass(), parameterMappingStrategy);
-    }
-
     @Override
     public String toString() {
         // avoid invoke toString on bean as it may be a remote proxy
         return ObjectHelper.className(bean) + "(" + ObjectHelper.getIdentityHashCode(bean) + ")";
     }
 
-    public Object getBean()  {
+    @Override
+    public Object getBean(Exchange exchange)  {
         return bean;
     }
 
+    @Override
     public Processor getProcessor() {
         if (this.processor == null) {
             this.processor = CamelContextHelper.convertTo(beanInfo.getCamelContext(), Processor.class, bean);
@@ -68,14 +64,17 @@ public class ConstantBeanHolder implements BeanHolder {
         return this.processor;
     }
 
+    @Override
     public boolean supportProcessor() {
         return true;
     }
 
+    @Override
     public BeanInfo getBeanInfo() {
         return beanInfo;
     }
 
+    @Override
     public BeanInfo getBeanInfo(Object bean) {
         return null;
     }

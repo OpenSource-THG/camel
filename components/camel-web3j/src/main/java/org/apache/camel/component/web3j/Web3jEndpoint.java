@@ -40,14 +40,14 @@ import org.web3j.protocol.ipc.WindowsIpcService;
 import org.web3j.quorum.Quorum;
 
 /**
- * The web3j component uses the Web3j client API and allows you to add/read nodes to/from a web3j compliant content repositories.
+ * Interact with Ethereum nodes using web3j client API.
  */
 @UriEndpoint(firstVersion = "2.22.0", scheme = "web3j", title = "Web3j Ethereum Blockchain", syntax = "web3j:nodeAddress",
     label = "bitcoin,blockchain")
 public class Web3jEndpoint extends DefaultEndpoint {
     private static final Logger LOG = LoggerFactory.getLogger(Web3jEndpoint.class);
 
-    private final Web3j web3j;
+    private Web3j web3j;
 
     @UriPath @Metadata(required = true)
     private String nodeAddress;
@@ -59,7 +59,16 @@ public class Web3jEndpoint extends DefaultEndpoint {
         super(uri, component);
         this.configuration = configuration;
         this.nodeAddress = remaining;
-        this.web3j = buildService(remaining, configuration);
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        this.web3j = buildService(nodeAddress, configuration);
+        super.doStart();
+    }
+
+    public Web3jConfiguration getConfiguration() {
+        return configuration;
     }
 
     @Override
@@ -78,7 +87,7 @@ public class Web3jEndpoint extends DefaultEndpoint {
         return web3j;
     }
 
-private Web3j buildService(String clientAddress, Web3jConfiguration configuration) {
+    private Web3j buildService(String clientAddress, Web3jConfiguration configuration) {
         LOG.info("Building service for endpoint: {}", clientAddress + configuration);
 
         if (configuration.getWeb3j() != null) {

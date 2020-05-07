@@ -18,6 +18,7 @@ package org.apache.camel.component.ldap;
 
 import java.net.URISyntaxException;
 import java.util.Map;
+
 import javax.naming.directory.SearchControls;
 
 import org.apache.camel.Consumer;
@@ -31,7 +32,7 @@ import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
 
 /**
- * The ldap component allows you to perform searches in LDAP servers using filters as the message payload.
+ * Perform searches on LDAP servers.
  */
 @UriEndpoint(firstVersion = "1.5.0", scheme = "ldap", title = "LDAP", syntax = "ldap:dirContextName", producerOnly = true, label = "ldap")
 public class LdapEndpoint extends DefaultEndpoint {
@@ -56,10 +57,12 @@ public class LdapEndpoint extends DefaultEndpoint {
         this.dirContextName = remaining;
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         throw new RuntimeCamelException("An LDAP Consumer would be the LDAP server itself! No such support here");
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         return new LdapProducer(this, dirContextName, base, toSearchControlScope(scope), pageSize, returnedAttributes);
     }

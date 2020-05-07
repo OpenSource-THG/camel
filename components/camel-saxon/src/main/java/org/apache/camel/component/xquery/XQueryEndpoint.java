@@ -17,7 +17,6 @@
 package org.apache.camel.component.xquery;
 
 import java.io.InputStream;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -33,12 +32,16 @@ import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.ProcessorEndpoint;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.service.ServiceHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Transforms the message using a XQuery template using Saxon.
+ * Query and/or transform XML payloads using XQuery and Saxon.
  */
 @UriEndpoint(firstVersion = "1.0.0", scheme = "xquery", title = "XQuery", syntax = "xquery:resourceUri", label = "transformation")
 public class XQueryEndpoint extends ProcessorEndpoint {
+
+    private static final Logger LOG = LoggerFactory.getLogger(XQueryEndpoint.class);
 
     private volatile XQueryBuilder xquery;
 
@@ -220,7 +223,7 @@ public class XQueryEndpoint extends ProcessorEndpoint {
     protected void doStart() throws Exception {
         super.doStart();
 
-        log.debug("{} using schema resource: {}", this, resourceUri);
+        LOG.debug("{} using schema resource: {}", this, resourceUri);
         InputStream is = ResourceHelper.resolveMandatoryResourceAsInputStream(getCamelContext(), resourceUri);
 
         this.xquery = XQueryBuilder.xquery(is);

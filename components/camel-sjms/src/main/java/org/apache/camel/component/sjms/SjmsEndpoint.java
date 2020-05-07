@@ -58,7 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The sjms component (simple jms) allows messages to be sent to (or consumed from) a JMS Queue or Topic (uses JMS 1.x API).
+ * Send and receive messages to/from a JMS Queue or Topic using plain JMS 1.x API.
  *
  * This component uses plain JMS API where as the jms component uses Spring JMS.
  */
@@ -92,7 +92,8 @@ public class SjmsEndpoint extends DefaultEndpoint implements AsyncEndpoint, Mult
                 + " If you need transaction against multiple JMS providers, use jms component to leverage XA transaction.")
     private boolean sharedJMSSession = true;
     @UriParam(label = "producer",
-            description = "Sets the reply to destination name used for InOut producer endpoints.")
+            description = "Sets the reply to destination name used for InOut producer endpoints. The type of the reply "
+                    + "to destination can be determined by the starting prefix (topic: or queue:) in its name.")
     private String namedReplyTo;
     @UriParam(defaultValue = "AUTO_ACKNOWLEDGE", enums = "SESSION_TRANSACTED,CLIENT_ACKNOWLEDGE,AUTO_ACKNOWLEDGE,DUPS_OK_ACKNOWLEDGE",
             description = "The JMS acknowledgement name, which is one of: SESSION_TRANSACTED, CLIENT_ACKNOWLEDGE, AUTO_ACKNOWLEDGE, DUPS_OK_ACKNOWLEDGE")
@@ -179,6 +180,10 @@ public class SjmsEndpoint extends DefaultEndpoint implements AsyncEndpoint, Mult
     @UriParam(defaultValue = "true", label = "consumer,logging",
             description = "Allows to control whether stacktraces should be logged or not, by the default errorHandler.")
     private boolean errorHandlerLogStackTrace = true;
+    @UriParam(label = "consumer", description = "Try to apply reconnection logic on consumer pool", defaultValue = "true")
+    private boolean reconnectOnError = true;
+    @UriParam(label = "consumer", description = "Backoff in millis on consumer pool reconnection attempts", defaultValue = "5000")
+    private long reconnectBackOff = 5000;
 
     private volatile boolean closeConnectionResource;
 
@@ -258,7 +263,7 @@ public class SjmsEndpoint extends DefaultEndpoint implements AsyncEndpoint, Mult
         }
 
         try {
-            logger.debug("Creating ConnectionResource with connectionCount: {} using ConnectionFactory", getConnectionCount(), getConnectionFactory());
+            logger.debug("Creating ConnectionResource with connectionCount: {} using ConnectionFactory: {}", getConnectionCount(), getConnectionFactory());
             // We always use a connection pool, even for a pool of 1
             ConnectionFactoryResource connections = new ConnectionFactoryResource(getConnectionCount(), getConnectionFactory(),
                 getComponent().getConnectionUsername(), getComponent().getConnectionPassword(), getComponent().getConnectionClientId(),
@@ -316,6 +321,7 @@ public class SjmsEndpoint extends DefaultEndpoint implements AsyncEndpoint, Mult
         return destinationName;
     }
 
+    @Override
     public HeaderFilterStrategy getHeaderFilterStrategy() {
         if (headerFilterStrategy == null) {
             headerFilterStrategy = new SjmsHeaderFilterStrategy(isIncludeAllJMSXProperties());
@@ -326,6 +332,7 @@ public class SjmsEndpoint extends DefaultEndpoint implements AsyncEndpoint, Mult
     /**
      * To use a custom HeaderFilterStrategy to filter header to and from Camel message.
      */
+    @Override
     public void setHeaderFilterStrategy(HeaderFilterStrategy strategy) {
         this.headerFilterStrategy = strategy;
     }
@@ -357,11 +364,15 @@ public class SjmsEndpoint extends DefaultEndpoint implements AsyncEndpoint, Mult
     /**
      * Initializes the connectionResource for the endpoint, which takes precedence over the component's connectionResource, if any
      */
+    public void setConnectionResource(ConnectionResource connectionResource) {
+        this.connectionResource = connectionResource;
+    }
+
     public void setConnectionResource(String connectionResource) {
         this.connectionResource = EndpointHelper.resolveReferenceParameter(getCamelContext(), connectionResource, ConnectionResource.class);
     }
 
-
+    @Override
     public boolean isSynchronous() {
         return synchronous;
     }
@@ -369,6 +380,7 @@ public class SjmsEndpoint extends DefaultEndpoint implements AsyncEndpoint, Mult
     /**
      * Sets whether synchronous processing should be strictly used or Camel is allowed to use asynchronous processing (if supported).
      */
+    @Override
     public void setSynchronous(boolean synchronous) {
         this.synchronous = synchronous;
     }
@@ -558,8 +570,8 @@ public class SjmsEndpoint extends DefaultEndpoint implements AsyncEndpoint, Mult
 
     /**
      * Sets the reply to destination name used for InOut producer endpoints.
-     * The type of the reply to destination can be determined by the starting 
-     * prefix (topic: or queue:) in its name. 
+     * The type of the reply to destination can be determined by the starting
+     * prefix (topic: or queue:) in its name.
      */
     public void setNamedReplyTo(String namedReplyTo) {
         this.namedReplyTo = namedReplyTo;
@@ -673,6 +685,10 @@ public class SjmsEndpoint extends DefaultEndpoint implements AsyncEndpoint, Mult
     /**
      * Initializes the connectionFactory for the endpoint, which takes precedence over the component's connectionFactory, if any
      */
+    public void setConnectionFactory(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
+    }
+
     public void setConnectionFactory(String connectionFactory) {
         this.connectionFactory = EndpointHelper.resolveReferenceParameter(getCamelContext(), connectionFactory, ConnectionFactory.class);
 
@@ -741,5 +757,27 @@ public class SjmsEndpoint extends DefaultEndpoint implements AsyncEndpoint, Mult
      */
     public void setJmsObjectFactory(JmsObjectFactory jmsObjectFactory) {
         this.jmsObjectFactory = jmsObjectFactory;
+    }
+
+    public boolean isReconnectOnError() {
+        return reconnectOnError;
+    }
+
+    /**
+     * Try to apply reconnection logic on consumer pool
+     */
+    public void setReconnectOnError(boolean reconnectOnError) {
+        this.reconnectOnError = reconnectOnError;
+    }
+
+    public long getReconnectBackOff() {
+        return reconnectBackOff;
+    }
+
+    /**
+     * Backoff in millis on consumer pool reconnection attempts
+     */
+    public void setReconnectBackOff(long reconnectBackOff) {
+        this.reconnectBackOff = reconnectBackOff;
     }
 }

@@ -19,7 +19,9 @@ package org.apache.camel.dataformat.base64;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.junit4.CamelTestSupport;
+import org.apache.camel.test.junit5.CamelTestSupport;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 public abstract class Base64DataFormatTestBase extends CamelTestSupport {
 
@@ -97,7 +99,7 @@ public abstract class Base64DataFormatTestBase extends CamelTestSupport {
 
     protected Base64DataFormat format = new Base64DataFormat();
 
-    @EndpointInject(uri = "mock:result")
+    @EndpointInject("mock:result")
     private MockEndpoint result;
 
     protected void runEncoderTest(byte[] raw, byte[] expected) throws Exception {
@@ -123,11 +125,11 @@ public abstract class Base64DataFormatTestBase extends CamelTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
 
             @Override
-            public void configure() throws Exception {
+            public void configure() {
                 from("direct:startEncode").marshal(format).to("mock:result");
 
                 from("direct:startDecode").unmarshal(format).to("mock:result");

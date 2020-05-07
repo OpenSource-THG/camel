@@ -127,7 +127,11 @@ public final class ObjectHelper {
             return (Boolean) value;
         }
         if (value instanceof String) {
-            return Boolean.valueOf((String) value);
+            // we only want to accept true or false as accepted values
+            String str = (String) value;
+            if ("true".equalsIgnoreCase(str) || "false".equalsIgnoreCase(str)) {
+                return Boolean.valueOf(str);
+            }
         }
         if (value instanceof Integer) {
             return (Integer) value > 0 ? Boolean.TRUE : Boolean.FALSE;
@@ -1162,4 +1166,15 @@ public final class ObjectHelper {
             return new RuntimeException(e);
         }
     }
+
+    /**
+     * Turns the input array to a list of objects.
+     * 
+     * @param objects an array of objects or null
+     * @return an object list
+     */
+    public static List<Object> asList(Object[] objects) {
+        return objects != null ? Arrays.asList(objects) : Collections.emptyList();
+    }
+    
 }

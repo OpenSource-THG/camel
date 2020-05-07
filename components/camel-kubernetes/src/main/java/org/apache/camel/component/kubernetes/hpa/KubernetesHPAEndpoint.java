@@ -22,15 +22,11 @@ import org.apache.camel.Producer;
 import org.apache.camel.component.kubernetes.AbstractKubernetesEndpoint;
 import org.apache.camel.component.kubernetes.KubernetesConfiguration;
 import org.apache.camel.spi.UriEndpoint;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * The Kubernetes HPA component provides a producer to execute kubernetes hpa operations
- * and a consumer to consume HPA events.
+ * Perform operations on Kubernetes Horizontal Pod Autoscalers (HPA) and get notified on HPA changes.
  */
-@UriEndpoint(firstVersion = "2.23.0", scheme = "kubernetes-hpa", title = "Kubernetes HPA",
-    syntax = "kubernetes-hpa:masterUrl", label = "container,cloud,paas")
+@UriEndpoint(firstVersion = "2.23.0", scheme = "kubernetes-hpa", title = "Kubernetes HPA", syntax = "kubernetes-hpa:masterUrl", label = "container,cloud,paas")
 public class KubernetesHPAEndpoint extends AbstractKubernetesEndpoint {
 
     public KubernetesHPAEndpoint(String uri, KubernetesHPAComponent component, KubernetesConfiguration config) {
@@ -44,7 +40,10 @@ public class KubernetesHPAEndpoint extends AbstractKubernetesEndpoint {
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        return new KubernetesHPAConsumer(this, processor);
+        Consumer consumer = new KubernetesHPAConsumer(this, processor);
+        configureConsumer(consumer);
+        return consumer;
+
     }
 
 }

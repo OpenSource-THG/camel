@@ -18,7 +18,6 @@ package org.apache.camel.component.ldap;
 
 import java.util.Collection;
 
-import javax.activation.DataHandler;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
@@ -26,7 +25,6 @@ import javax.naming.ldap.LdapContext;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
@@ -46,7 +44,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(FrameworkRunner.class)
@@ -144,17 +141,13 @@ public class LdapRouteTest extends AbstractLdapTestUnit {
     }
     
     @Test
-    public void testLdapRoutePreserveHeaderAndAttachments() throws Exception {
+    public void testLdapRoutePreserveHeader() throws Exception {
         camel.addRoutes(createRouteBuilder("ldap:localhost:" + port + "?base=ou=system"));
         camel.start();
 
-        final DataHandler dataHandler = new DataHandler("test", "text");
-        Exchange out = template.request("direct:start", new Processor() {
-            public void process(Exchange exchange) throws Exception {
-                exchange.getIn().setBody("(!(ou=test1))");
-                exchange.getIn().setHeader("ldapTest", "Camel");
-                exchange.getIn().addAttachment("ldapAttachment", dataHandler);
-            }
+        Exchange out = template.request("direct:start", exchange -> {
+            exchange.getIn().setBody("(!(ou=test1))");
+            exchange.getIn().setHeader("ldapTest", "Camel");
         });
         
         Collection<SearchResult> searchResults = defaultLdapModuleOutAssertions(out);
@@ -163,17 +156,16 @@ public class LdapRouteTest extends AbstractLdapTestUnit {
         assertTrue(contains("uid=test2,ou=test,ou=system", searchResults));
         assertTrue(contains("uid=testNoOU,ou=test,ou=system", searchResults));
         assertTrue(contains("uid=tcruise,ou=actors,ou=system", searchResults));
-        assertEquals("Camel", out.getOut().getHeader("ldapTest"));
-        assertSame(dataHandler, out.getOut().getAttachment("ldapAttachment"));
+        assertEquals("Camel", out.getMessage().getHeader("ldapTest"));
     }
 
     @SuppressWarnings("unchecked")
     private Collection<SearchResult> defaultLdapModuleOutAssertions(Exchange out) {
         // assertions of the response
         assertNotNull(out);
-        assertNotNull(out.getOut());
-        Collection<SearchResult> data = out.getOut().getBody(Collection.class);
-        assertNotNull("out body could not be converted to a Collection - was: " + out.getOut().getBody(), data);
+        assertNotNull(out.getMessage());
+        Collection<SearchResult> data = out.getMessage().getBody(Collection.class);
+        assertNotNull("out body could not be converted to a Collection - was: " + out.getMessage().getBody(), data);
         return data;
     }
 

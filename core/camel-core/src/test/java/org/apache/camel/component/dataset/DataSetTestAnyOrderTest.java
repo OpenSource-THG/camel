@@ -22,11 +22,6 @@ import org.junit.Test;
 
 public class DataSetTestAnyOrderTest extends ContextTestSupport {
 
-    @Override
-    public boolean isUseRouteBuilder() {
-        return false;
-    }
-
     @Test
     public void testAnyOrder() throws Exception {
         template.sendBody("seda:testme", "Bye World");
@@ -35,11 +30,9 @@ public class DataSetTestAnyOrderTest extends ContextTestSupport {
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("direct:start")
-                        .to("dataset-test:seda:testme?anyOrder=true&timeout=0");
+                from("direct:start").to("dataset-test:seda:testme?anyOrder=true&timeout=0");
             }
         });
-        context.start();
 
         template.sendBody("direct:start", "Hello World");
         template.sendBody("direct:start", "Bye World");

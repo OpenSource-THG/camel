@@ -27,12 +27,12 @@ import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
 
 /**
- * The azure-queue component is used for storing and retrieving messages from Azure Storage Queue Service.
+ * Store and retrieve messages from Azure Storage Queue Service.
  */
 @UriEndpoint(firstVersion = "2.19.0",
              scheme = "azure-queue",
-             title = "Azure Storage Queue Service", 
-             syntax = "azure-blob:containerAndQueueUri", 
+             title = "Azure Storage Queue Service (Legacy)",
+             syntax = "azure-blob:containerAndQueueUri",
              label = "cloud,queue,azure")
 public class QueueServiceEndpoint extends DefaultEndpoint {
 
@@ -47,15 +47,15 @@ public class QueueServiceEndpoint extends DefaultEndpoint {
         this.configuration = configuration;
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        log.trace("Creating a consumer");
         QueueServiceConsumer consumer = new QueueServiceConsumer(this, processor);
         configureConsumer(consumer);
         return consumer;
     }
 
+    @Override
     public Producer createProducer() throws Exception {
-        log.trace("Creating a producer");
         return new QueueServiceProducer(this);
     }
 

@@ -36,7 +36,7 @@ import org.apache.camel.support.component.ApiMethod;
 import org.apache.camel.support.component.ApiMethodPropertiesHelper;
 
 /**
- * Communicates with OData 4.0 services using Apache Olingo OData API.
+ * Communicate with OData 4.0 services using Apache Olingo OData API.
  */
 @UriEndpoint(firstVersion = "2.19.0", scheme = "olingo4", title = "Olingo4", syntax = "olingo4:apiName/methodName", label = "cloud")
 public class Olingo4Endpoint extends AbstractApiEndpoint<Olingo4ApiName, Olingo4Configuration> {
@@ -79,10 +79,12 @@ public class Olingo4Endpoint extends AbstractApiEndpoint<Olingo4ApiName, Olingo4
         endpointPropertyNames.add(FILTER_ALREADY_SEEN);
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         return new Olingo4Producer(this);
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         // make sure inBody is not set for consumers
         if (inBody != null) {
@@ -93,7 +95,7 @@ public class Olingo4Endpoint extends AbstractApiEndpoint<Olingo4ApiName, Olingo4
             throw new IllegalArgumentException("Only read method is supported for consumer endpoints");
         }
         final Olingo4Consumer consumer = new Olingo4Consumer(this, processor);
-        // also set consumer.* properties
+        consumer.setSplitResult(configuration.isSplitResult());
         configureConsumer(consumer);
         return consumer;
     }
@@ -103,16 +105,16 @@ public class Olingo4Endpoint extends AbstractApiEndpoint<Olingo4ApiName, Olingo4
         return Olingo4PropertiesHelper.getHelper();
     }
 
+    @Override
     protected String getThreadProfileName() {
         return Olingo4Constants.THREAD_PROFILE_NAME;
     }
 
     @Override
     public void configureProperties(Map<String, Object> options) {
+        super.configureProperties(options);
         // handle individual query params
         parseQueryParams(options);
-
-        super.configureProperties(options);
     }
 
     @Override
@@ -163,12 +165,13 @@ public class Olingo4Endpoint extends AbstractApiEndpoint<Olingo4ApiName, Olingo4
 
     @Override
     public void interceptProperties(Map<String, Object> properties) {
+        Map<String, String> endpointHttpHeaders = (Map<String, String>)properties.get(ENDPOINT_HTTP_HEADERS_PROPERTY);
 
         // read Edm if not set yet
-        properties.put(EDM_PROPERTY, apiProxy.getEdm());
+        properties.put(EDM_PROPERTY, apiProxy.getEdm(endpointHttpHeaders));
 
         // handle filterAlreadySeen property
-        properties.put(FILTER_ALREADY_SEEN, configuration.getFilterAlreadySeen());
+        properties.put(FILTER_ALREADY_SEEN, configuration.isFilterAlreadySeen());
 
         // handle keyPredicate
         final String keyPredicate = (String)properties.get(KEY_PREDICATE_PROPERTY);
@@ -201,10 +204,7 @@ public class Olingo4Endpoint extends AbstractApiEndpoint<Olingo4ApiName, Olingo4
             final Map.Entry<String, Object> entry = it.next();
             final String paramName = entry.getKey();
 
-            /**
-             * Avoid swallowing consumer scheduler properties, which
-             * get processed in configureProperties()
-             */
+            // Avoid swallowing consumer scheduler properties, which get processed in configureProperties()
             if (paramName.startsWith("consumer.")) {
                 continue;
             }

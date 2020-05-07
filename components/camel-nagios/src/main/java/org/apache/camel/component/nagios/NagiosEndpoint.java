@@ -29,7 +29,7 @@ import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.util.ObjectHelper;
 
 /**
- * To send passive checks to Nagios using JSendNSCA.
+ * Send passive checks to Nagios using JSendNSCA.
  */
 @UriEndpoint(firstVersion = "2.3.0", scheme = "nagios", title = "Nagios", syntax = "nagios:host:port", producerOnly = true, label = "monitoring")
 public class NagiosEndpoint extends DefaultEndpoint {
@@ -47,11 +47,13 @@ public class NagiosEndpoint extends DefaultEndpoint {
         super(endpointUri, component);
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         ObjectHelper.notNull(configuration, "configuration");
         return new NagiosProducer(this, getSender());
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         throw new UnsupportedOperationException("Nagios consumer not supported");
     }
@@ -76,19 +78,25 @@ public class NagiosEndpoint extends DefaultEndpoint {
         this.sendSync = sendSync;
     }
 
-    public synchronized PassiveCheckSender getSender() {
-        if (sender == null) {
-            if (isSendSync()) {
-                sender = new NagiosPassiveCheckSender(getConfiguration().getNagiosSettings());
-            } else {
-                // use a non blocking sender
-                sender = new NonBlockingNagiosPassiveCheckSender(getConfiguration().getNagiosSettings());
-            }
-        }
+    public PassiveCheckSender getSender() {
         return sender;
     }
 
     public void setSender(PassiveCheckSender sender) {
         this.sender = sender;
+    }
+
+    @Override
+    protected void doInit() throws Exception {
+        super.doInit();
+
+        if (sender == null) {
+            if (isSendSync()) {
+                sender = new NagiosPassiveCheckSender(getConfiguration().getOrCreateNagiosSettings());
+            } else {
+                // use a non blocking sender
+                sender = new NonBlockingNagiosPassiveCheckSender(getConfiguration().getOrCreateNagiosSettings());
+            }
+        }
     }
 }

@@ -38,6 +38,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.Expression;
 import org.apache.camel.ExpressionEvaluationException;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Message;
 import org.apache.camel.NoTypeConversionAvailableException;
 import org.apache.camel.Pattern;
@@ -47,6 +48,7 @@ import org.apache.camel.StreamCache;
 import org.apache.camel.support.DefaultMessage;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.ExpressionAdapter;
+import org.apache.camel.support.MessageHelper;
 import org.apache.camel.support.ObjectHelper;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.StringHelper;
@@ -54,8 +56,8 @@ import org.apache.camel.util.StringQuoteHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.camel.util.ObjectHelper.asList;
 import static org.apache.camel.util.ObjectHelper.asString;
-
 
 /**
  * Information about a method to be used for invocation.
@@ -123,8 +125,8 @@ public class MethodInfo {
 
         org.apache.camel.RoutingSlip routingSlipAnnotation =
             (org.apache.camel.RoutingSlip)collectedMethodAnnotation.get(org.apache.camel.RoutingSlip.class);
-        if (routingSlipAnnotation != null && matchContext(routingSlipAnnotation.context())) {
-            routingSlip = camelContext.getAnnotationBasedProcessorFactory().createRoutingSlip(camelContext, routingSlipAnnotation);
+        if (routingSlipAnnotation != null) {
+            routingSlip = camelContext.adapt(ExtendedCamelContext.class).getAnnotationBasedProcessorFactory().createRoutingSlip(camelContext, routingSlipAnnotation);
             // add created routingSlip as a service so we have its lifecycle managed
             try {
                 camelContext.addService(routingSlip);
@@ -135,9 +137,8 @@ public class MethodInfo {
 
         org.apache.camel.DynamicRouter dynamicRouterAnnotation =
             (org.apache.camel.DynamicRouter)collectedMethodAnnotation.get(org.apache.camel.DynamicRouter.class);
-        if (dynamicRouterAnnotation != null
-                && matchContext(dynamicRouterAnnotation.context())) {
-            dynamicRouter = camelContext.getAnnotationBasedProcessorFactory().createDynamicRouter(camelContext, dynamicRouterAnnotation);
+        if (dynamicRouterAnnotation != null) {
+            dynamicRouter = camelContext.adapt(ExtendedCamelContext.class).getAnnotationBasedProcessorFactory().createDynamicRouter(camelContext, dynamicRouterAnnotation);
             // add created dynamicRouter as a service so we have its lifecycle managed
             try {
                 camelContext.addService(dynamicRouter);
@@ -148,9 +149,8 @@ public class MethodInfo {
 
         org.apache.camel.RecipientList recipientListAnnotation =
             (org.apache.camel.RecipientList)collectedMethodAnnotation.get(org.apache.camel.RecipientList.class);
-        if (recipientListAnnotation != null
-                && matchContext(recipientListAnnotation.context())) {
-            recipientList = camelContext.getAnnotationBasedProcessorFactory().createRecipientList(camelContext, recipientListAnnotation);
+        if (recipientListAnnotation != null) {
+            recipientList = camelContext.adapt(ExtendedCamelContext.class).getAnnotationBasedProcessorFactory().createRecipientList(camelContext, recipientListAnnotation);
             // add created recipientList as a service so we have its lifecycle managed
             try {
                 camelContext.addService(recipientList);
@@ -184,18 +184,7 @@ public class MethodInfo {
         }
     }
 
-    /**
-     * Does the given context match this camel context
-     */
-    private boolean matchContext(String context) {
-        if (org.apache.camel.util.ObjectHelper.isNotEmpty(context)) {
-            if (!camelContext.getName().equals(context)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
+    @Override
     public String toString() {
         return method.toString();
     }
@@ -218,12 +207,9 @@ public class MethodInfo {
             }
 
             public boolean proceed(AsyncCallback callback) {
-                Object body = exchange.getIn().getBody();
-                if (body instanceof StreamCache) {
-                    // ensure the stream cache is reset before calling the method
-                    ((StreamCache) body).reset();
-                }
                 try {
+                    // reset cached streams so they can be read again
+                    MessageHelper.resetStreamCache(exchange.getIn());
                     return doProceed(callback);
                 } catch (InvocationTargetException e) {
                     exchange.setException(e.getTargetException());
@@ -284,7 +270,7 @@ public class MethodInfo {
                 }
 
                 //If it's Java 8 async result
-                if (CompletionStage.class.isAssignableFrom(getMethod().getReturnType())) {
+                if (CompletionStage.class.isAssignableFrom(method.getReturnType())) {
                     CompletionStage<?> completionStage = (CompletionStage<?>) result;
 
                     completionStage
@@ -300,7 +286,7 @@ public class MethodInfo {
                 }
 
                 // if the method returns something then set the value returned on the Exchange
-                if (!getMethod().getReturnType().equals(Void.TYPE) && result != Void.TYPE) {
+                if (result != Void.TYPE && !method.getReturnType().equals(Void.TYPE)) {
                     fillResult(exchange, result);
                 }
 
@@ -324,16 +310,12 @@ public class MethodInfo {
         LOG.trace("Setting bean invocation result : {}", result);
 
         // the bean component forces OUT if the MEP is OUT capable
-        boolean out = ExchangeHelper.isOutCapable(exchange) || exchange.hasOut();
+        boolean out = exchange.hasOut() || ExchangeHelper.isOutCapable(exchange);
         Message old;
         if (out) {
             old = exchange.getOut();
             // propagate headers
             exchange.getOut().getHeaders().putAll(exchange.getIn().getHeaders());
-            // propagate attachments
-            if (exchange.getIn().hasAttachments()) {
-                exchange.getOut().getAttachments().putAll(exchange.getIn().getAttachments());
-            }
         } else {
             old = exchange.getIn();
         }
@@ -438,9 +420,9 @@ public class MethodInfo {
         try {
             return ObjectHelper.invokeMethodSafe(mth, pojo, arguments);
         } catch (IllegalAccessException e) {
-            throw new RuntimeExchangeException("IllegalAccessException occurred invoking method: " + mth + " using arguments: " + Arrays.asList(arguments), exchange, e);
+            throw new RuntimeExchangeException("IllegalAccessException occurred invoking method: " + mth + " using arguments: " + asList(arguments), exchange, e);
         } catch (IllegalArgumentException e) {
-            throw new RuntimeExchangeException("IllegalArgumentException occurred invoking method: " + mth + " using arguments: " + Arrays.asList(arguments), exchange, e);
+            throw new RuntimeExchangeException("IllegalArgumentException occurred invoking method: " + mth + " using arguments: " + asList(arguments), exchange, e);
         }
     }
 
@@ -596,6 +578,7 @@ public class MethodInfo {
             this.expressions = expressions;
         }
 
+        @Override
         @SuppressWarnings("unchecked")
         public <T> T evaluate(Exchange exchange, Class<T> type) {
             Object body = exchange.getIn().getBody();

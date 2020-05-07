@@ -27,7 +27,7 @@ import org.junit.Test;
 
 public class JaxbDataFormatPartClassTest extends CamelTestSupport {
 
-    @EndpointInject(uri = "mock:marshall")
+    @EndpointInject("mock:marshall")
     private MockEndpoint mockMarshall;
 
     @Test
@@ -66,7 +66,7 @@ public class JaxbDataFormatPartClassTest extends CamelTestSupport {
             public void configure() throws Exception {
                 JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
                 jaxbDataFormat.setContextPath(Address.class.getPackage().getName());
-                jaxbDataFormat.setPartClass("org.apache.camel.example.Address");
+                jaxbDataFormat.setPartClass(Address.class);
                 jaxbDataFormat.setPartNamespace(new QName("http://www.camel.apache.org/jaxb/example/address/1", "address"));
                 jaxbDataFormat.setPrettyPrint(true);
 

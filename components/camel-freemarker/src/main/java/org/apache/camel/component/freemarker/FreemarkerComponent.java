@@ -35,6 +35,8 @@ import org.apache.camel.util.ObjectHelper;
 @Component("freemarker")
 public class FreemarkerComponent extends DefaultComponent {
 
+    @Metadata(defaultValue = "false")
+    private boolean allowTemplateFromHeader;
     @Metadata(label = "advanced")
     private Configuration configuration;
     private Configuration noCacheConfiguration;
@@ -42,6 +44,7 @@ public class FreemarkerComponent extends DefaultComponent {
     public FreemarkerComponent() {
     }
 
+    @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         // should we use regular configuration or no cache (content cache is default true)
         Configuration config;
@@ -61,9 +64,12 @@ public class FreemarkerComponent extends DefaultComponent {
         if (ObjectHelper.isNotEmpty(encoding)) {
             endpoint.setEncoding(encoding);
         }
+        endpoint.setAllowTemplateFromHeader(allowTemplateFromHeader);
         endpoint.setContentCache(cache);
         endpoint.setConfiguration(config);
         endpoint.setTemplateUpdateDelay(templateUpdateDelay);
+
+        setProperties(endpoint, parameters);
 
         // if its a http resource then append any remaining parameters and update the resource uri
         if (ResourceHelper.isHttpUri(remaining)) {
@@ -98,6 +104,20 @@ public class FreemarkerComponent extends DefaultComponent {
      */
     public void setConfiguration(Configuration configuration) {
         this.configuration = configuration;
+    }
+
+    public boolean isAllowTemplateFromHeader() {
+        return allowTemplateFromHeader;
+    }
+
+    /**
+     * Whether to allow to use resource template from header or not (default false).
+     *
+     * Enabling this allows to specify dynamic templates via message header. However this can
+     * be seen as a potential security vulnerability if the header is coming from a malicious user, so use this with care.
+     */
+    public void setAllowTemplateFromHeader(boolean allowTemplateFromHeader) {
+        this.allowTemplateFromHeader = allowTemplateFromHeader;
     }
 
     private synchronized Configuration getNoCacheConfiguration() {

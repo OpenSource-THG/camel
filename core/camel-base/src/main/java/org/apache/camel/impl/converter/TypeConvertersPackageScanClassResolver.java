@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.camel.spi.PackageScanClassResolver;
 import org.apache.camel.spi.PackageScanFilter;
+import org.apache.camel.support.service.ServiceSupport;
 
 /**
  * A {@link org.apache.camel.spi.ClassResolver} which loads type converters
@@ -31,7 +32,7 @@ import org.apache.camel.spi.PackageScanFilter;
  * This is used when adding converters manually using the
  * {@link org.apache.camel.impl.converter.BaseTypeConverterRegistry#addTypeConverters(org.apache.camel.TypeConverters)} method.
  */
-public class TypeConvertersPackageScanClassResolver implements PackageScanClassResolver {
+public class TypeConvertersPackageScanClassResolver extends ServiceSupport implements PackageScanClassResolver {
 
     private final Set<ClassLoader> classLoaders = new LinkedHashSet<>();
     private final Set<Class<?>> converters = new LinkedHashSet<>();
@@ -84,4 +85,15 @@ public class TypeConvertersPackageScanClassResolver implements PackageScanClassR
     public void removeFilter(PackageScanFilter filter) {
         // noop
     }
+
+    @Override
+    public void setAcceptableSchemes(String schemes) {
+        // noop
+    }
+
+    @Override
+    public void clearCache() {
+        // noop
+    }
+
 }

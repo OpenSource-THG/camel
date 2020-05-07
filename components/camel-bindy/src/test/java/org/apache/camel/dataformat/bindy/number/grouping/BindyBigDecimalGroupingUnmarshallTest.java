@@ -36,10 +36,10 @@ public class BindyBigDecimalGroupingUnmarshallTest extends CamelTestSupport {
     private static final String URI_MOCK_RESULT = "mock:result";
     private static final String URI_DIRECT_START = "direct:start";
 
-    @Produce(uri = URI_DIRECT_START)
+    @Produce(URI_DIRECT_START)
     private ProducerTemplate template;
 
-    @EndpointInject(uri = URI_MOCK_RESULT)
+    @EndpointInject(URI_MOCK_RESULT)
     private MockEndpoint result;
 
     private String record;
@@ -65,10 +65,10 @@ public class BindyBigDecimalGroupingUnmarshallTest extends CamelTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                BindyDataFormat bindy = new BindyDataFormat();
-                bindy.setType(BindyType.Csv);
-                bindy.setClassType(NumberModel.class);
-                bindy.setLocale("en");
+                BindyDataFormat bindy = new BindyDataFormat()
+                        .type(BindyType.Csv)
+                        .classType(NumberModel.class)
+                        .locale("en");
 
                 from(URI_DIRECT_START)
                     .unmarshal(bindy)

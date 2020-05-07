@@ -16,11 +16,15 @@
  */
 package org.apache.camel.coap;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.net.ssl.SSLContext;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Consumer;
@@ -29,6 +33,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.spi.RestConsumerFactory;
 import org.apache.camel.spi.annotations.Component;
+import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.util.FileUtil;
 import org.apache.camel.util.HostUtils;
@@ -37,6 +42,8 @@ import org.apache.camel.util.URISupport;
 import org.eclipse.californium.core.CoapServer;
 import org.eclipse.californium.core.network.CoapEndpoint;
 import org.eclipse.californium.core.network.config.NetworkConfig;
+import org.eclipse.californium.elements.tcp.netty.TcpServerConnector;
+import org.eclipse.californium.elements.tcp.netty.TlsServerConnector;
 import org.eclipse.californium.scandium.DTLSConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +51,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Represents the component that manages {@link CoAPEndpoint}.
  */
-@Component("coap")
+@Component("coap,coaps,coap+tcp,coaps+tcp")
 public class CoAPComponent extends DefaultComponent implements RestConsumerFactory {
     static final int DEFAULT_PORT = 5684;
     private static final Logger LOG = LoggerFactory.getLogger(CoAPComponent.class);
@@ -54,7 +61,7 @@ public class CoAPComponent extends DefaultComponent implements RestConsumerFacto
     public CoAPComponent() {
     }
 
-    public synchronized CoapServer getServer(int port, CoAPEndpoint endpoint) {
+    public synchronized CoapServer getServer(int port, CoAPEndpoint endpoint) throws IOException, GeneralSecurityException {
         CoapServer server = servers.get(port);
         if (server == null && port == -1) {
             server = getServer(DEFAULT_PORT, endpoint);
@@ -65,10 +72,31 @@ public class CoAPComponent extends DefaultComponent implements RestConsumerFacto
             InetSocketAddress address = new InetSocketAddress(port);
             coapBuilder.setNetworkConfig(config);
 
-            // Configure TLS
-            if (CoAPEndpoint.enableTLS(endpoint.getUri())) {
+            // Configure TLS and / or TCP
+            if (CoAPEndpoint.enableDTLS(endpoint.getUri())) {
                 DTLSConnector connector = endpoint.createDTLSConnector(address, false);
                 coapBuilder.setConnector(connector);
+            } else if (CoAPEndpoint.enableTCP(endpoint.getUri())) {
+                int tcpThreads = config.getInt(NetworkConfig.Keys.TCP_WORKER_THREADS);
+                int tcpIdleTimeout = config.getInt(NetworkConfig.Keys.TCP_CONNECTION_IDLE_TIMEOUT);
+
+                TcpServerConnector tcpConnector = null;
+                // TLS + TCP
+                if (endpoint.getUri().getScheme().startsWith("coaps")) {
+                    int tlsHandshakeTimeout = config.getInt(NetworkConfig.Keys.TLS_HANDSHAKE_TIMEOUT);
+
+                    SSLContext sslContext = endpoint.getSslContextParameters().createSSLContext(getCamelContext());
+                    TlsServerConnector.ClientAuthMode clientAuthMode = TlsServerConnector.ClientAuthMode.NONE;
+                    if (endpoint.isClientAuthenticationRequired()) {
+                        clientAuthMode = TlsServerConnector.ClientAuthMode.NEEDED;
+                    } else if (endpoint.isClientAuthenticationWanted()) {
+                        clientAuthMode = TlsServerConnector.ClientAuthMode.WANTED;
+                    }
+                    tcpConnector = new TlsServerConnector(sslContext, clientAuthMode, address, tcpThreads, tlsHandshakeTimeout, tcpIdleTimeout);
+                } else {
+                    tcpConnector = new TcpServerConnector(address, tcpThreads, tcpIdleTimeout);
+                }
+                coapBuilder.setConnector(tcpConnector);
             } else {
                 coapBuilder.setInetSocketAddress(address);
             }
@@ -84,6 +112,7 @@ public class CoAPComponent extends DefaultComponent implements RestConsumerFacto
         return server;
     }
 
+    @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         Endpoint endpoint = new CoAPEndpoint(uri, this);
         setProperties(endpoint, parameters);
@@ -91,8 +120,9 @@ public class CoAPComponent extends DefaultComponent implements RestConsumerFacto
     }
 
     @Override
-    public Consumer createConsumer(CamelContext camelContext, Processor processor, String verb, String basePath,
-            String uriTemplate, String consumes, String produces, RestConfiguration configuration, Map<String, Object> parameters) throws Exception {
+    public Consumer createConsumer(CamelContext camelContext, Processor processor, String verb, String basePath, String uriTemplate, String consumes, String produces,
+                                   RestConfiguration configuration, Map<String, Object> parameters)
+        throws Exception {
 
         String path = basePath;
         if (uriTemplate != null) {
@@ -107,7 +137,7 @@ public class CoAPComponent extends DefaultComponent implements RestConsumerFacto
 
         RestConfiguration config = configuration;
         if (config == null) {
-            config = getCamelContext().getRestConfiguration("coap", true);
+            config = CamelContextHelper.getRestConfiguration(getCamelContext(), "coap");
         }
 
         if (config.isEnableCORS()) {
@@ -163,7 +193,7 @@ public class CoAPComponent extends DefaultComponent implements RestConsumerFacto
         // configure consumer properties
         Consumer consumer = endpoint.createConsumer(processor);
         if (config.getConsumerProperties() != null && !config.getConsumerProperties().isEmpty()) {
-            setProperties(consumer, config.getConsumerProperties());
+            setProperties(camelContext, consumer, config.getConsumerProperties());
         }
         return consumer;
     }

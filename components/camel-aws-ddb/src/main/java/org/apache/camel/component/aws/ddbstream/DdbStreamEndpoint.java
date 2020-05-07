@@ -21,10 +21,10 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreams;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreamsClientBuilder;
 import com.amazonaws.services.dynamodbv2.model.Record;
-
 import org.apache.camel.Consumer;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -35,7 +35,7 @@ import org.apache.camel.support.ScheduledPollEndpoint;
 import org.apache.camel.util.ObjectHelper;
 
 /**
- * The aws-ddbstream component is used for working with Amazon DynamoDB Streams.
+ * Receive messages from AWS DynamoDB Stream service.
  */
 @UriEndpoint(firstVersion = "2.17.0", scheme = "aws-ddbstream", title = "AWS DynamoDB Streams",
         consumerOnly = true, syntax = "aws-ddbstream:tableName",
@@ -44,7 +44,7 @@ public class DdbStreamEndpoint extends ScheduledPollEndpoint {
 
     @UriParam
     DdbStreamConfiguration configuration;
-    
+
     private AmazonDynamoDBStreams ddbStreamClient;
 
     public DdbStreamEndpoint(String uri, DdbStreamConfiguration configuration, DdbStreamComponent component) {
@@ -71,15 +71,15 @@ public class DdbStreamEndpoint extends ScheduledPollEndpoint {
 
         return ex;
     }
-    
+
     @Override
     public void doStart() throws Exception {
         super.doStart();
-        
+
         ddbStreamClient = configuration.getAmazonDynamoDbStreamsClient() != null ? configuration.getAmazonDynamoDbStreamsClient()
-            : createDdbStreamClient();
+                : createDdbStreamClient();
     }
-    
+
     @Override
     public void doStop() throws Exception {
         if (ObjectHelper.isEmpty(configuration.getAmazonDynamoDbStreamsClient())) {
@@ -93,27 +93,27 @@ public class DdbStreamEndpoint extends ScheduledPollEndpoint {
     public DdbStreamConfiguration getConfiguration() {
         return configuration;
     }
-    
+
     public AmazonDynamoDBStreams getClient() {
         return ddbStreamClient;
     }
 
     public String getSequenceNumber() {
         switch (configuration.getIteratorType()) {
-        case AFTER_SEQUENCE_NUMBER:
-        case AT_SEQUENCE_NUMBER:
-            if (null == configuration.getSequenceNumberProvider()) {
-                throw new IllegalStateException("sequenceNumberProvider must be"
-                        + " provided, either as an implementation of"
-                        + " SequenceNumberProvider or a literal String.");
-            } else {
-                return configuration.getSequenceNumberProvider().getSequenceNumber();
-            }
-        default:
-            return "";
+            case AFTER_SEQUENCE_NUMBER:
+            case AT_SEQUENCE_NUMBER:
+                if (null == configuration.getSequenceNumberProvider()) {
+                    throw new IllegalStateException("sequenceNumberProvider must be"
+                            + " provided, either as an implementation of"
+                            + " SequenceNumberProvider or a literal String.");
+                } else {
+                    return configuration.getSequenceNumberProvider().getSequenceNumber();
+                }
+            default:
+                return "";
         }
     }
-    
+
     AmazonDynamoDBStreams createDdbStreamClient() {
         AmazonDynamoDBStreams client = null;
         ClientConfiguration clientConfiguration = null;
@@ -141,7 +141,7 @@ public class DdbStreamEndpoint extends ScheduledPollEndpoint {
             }
         }
         if (ObjectHelper.isNotEmpty(configuration.getRegion())) {
-            clientBuilder = clientBuilder.withRegion(configuration.getRegion());
+            clientBuilder = clientBuilder.withRegion(Regions.valueOf(configuration.getRegion()));
         }
         client = clientBuilder.build();
         return client;

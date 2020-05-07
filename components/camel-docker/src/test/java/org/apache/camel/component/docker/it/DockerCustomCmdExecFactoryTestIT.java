@@ -19,9 +19,6 @@ package org.apache.camel.component.docker.it;
 import java.util.concurrent.TimeUnit;
 
 import com.github.dockerjava.api.model.Version;
-
-import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.Test;
@@ -49,12 +46,9 @@ public class DockerCustomCmdExecFactoryTestIT extends DockerITTestSupport  {
                 from("direct:in")
                     .to("docker://version?cmdExecFactory=" + FakeDockerCmdExecFactory.class.getName())
                     .log("${body}")
-                    .process(new Processor() {
-                        @Override
-                        public void process(Exchange exchange) throws Exception {
-                            Version version = exchange.getIn().getBody(Version.class);
-                            exchange.getOut().setBody(version.getVersion());
-                        }
+                    .process(exchange -> {
+                        Version version = exchange.getIn().getBody(Version.class);
+                        exchange.getMessage().setBody(version.getVersion());
                     })
                     .to("mock:result");
             }

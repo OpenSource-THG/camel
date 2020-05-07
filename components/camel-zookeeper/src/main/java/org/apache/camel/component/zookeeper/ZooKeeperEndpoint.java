@@ -29,7 +29,7 @@ import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
 
 /**
- * The zookeeper component allows interaction with a ZooKeeper cluster.
+ * Manage ZooKeeper clusters.
  */
 @ManagedResource(description = "ZooKeeper Endpoint")
 @UriEndpoint(firstVersion = "2.9.0", scheme = "zookeeper", title = "ZooKeeper", syntax = "zookeeper:serverUrls/path", label = "clustering")
@@ -44,17 +44,19 @@ public class ZooKeeperEndpoint extends DefaultEndpoint {
         this.connectionManager = new ZooKeeperConnectionManager(this);
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         return new ZooKeeperProducer(this);
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         ZooKeeperConsumer answer = new ZooKeeperConsumer(this, processor);
         configureConsumer(answer);
         return answer;
     }
 
-public void setConfiguration(ZooKeeperConfiguration configuration) {
+    public void setConfiguration(ZooKeeperConfiguration configuration) {
         this.configuration = configuration;
     }
 
@@ -127,22 +129,6 @@ public void setConfiguration(ZooKeeperConfiguration configuration) {
 
     public void setBackoff(long backoff) {
         getConfiguration().setBackoff(backoff);
-    }
-
-    /**
-     * @deprecated The usage of this property has no effect at all.
-     */
-    @Deprecated
-    public boolean getAwaitExistence() {
-        return getConfiguration().shouldAwaitExistence();
-    }
-
-    /**
-     * @deprecated The usage of this property has no effect at all.
-     */
-    @Deprecated
-    public void setAwaitExistence(boolean awaitExistence) {
-        getConfiguration().setAwaitExistence(awaitExistence);
     }
 
     @ManagedOperation

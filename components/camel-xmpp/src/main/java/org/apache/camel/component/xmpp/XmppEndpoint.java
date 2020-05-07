@@ -51,13 +51,17 @@ import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.jid.parts.Localpart;
 import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * To send and receive messages from a XMPP (chat) server.
+ * Send and receive messages to/from an XMPP chat server.
  */
 @UriEndpoint(firstVersion = "1.0", scheme = "xmpp", title = "XMPP", syntax = "xmpp:host:port/participant", alternativeSyntax = "xmpp:user:password@host:port/participant",
         label = "chat,messaging")
 public class XmppEndpoint extends DefaultEndpoint implements HeaderFilterStrategyAware {
+
+    private static final Logger LOG = LoggerFactory.getLogger(XmppEndpoint.class);
 
     private volatile XMPPTCPConnection connection;
     private XmppBinding binding;
@@ -80,6 +84,8 @@ public class XmppEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
     private boolean createAccount;
     @UriParam(label = "common")
     private String room;
+    @UriParam(label = "security", secret = true)
+    private String roomPassword;
     @UriParam(label = "common")
     private String nickname;
     @UriParam(label = "common")
@@ -104,6 +110,7 @@ public class XmppEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
         super(uri, component);
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         if (room != null) {
             return createGroupChatProducer();
@@ -137,6 +144,7 @@ public class XmppEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
         return new XmppPubSubProducer(this);
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         XmppConsumer answer = new XmppConsumer(this, processor);
         configureConsumer(answer);
@@ -155,7 +163,7 @@ public class XmppEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
         return "xmpp://" + host + ":" + port + "/" + getParticipant() + "?serviceName=" + serviceName;
     }
 
-public synchronized XMPPTCPConnection createConnection() throws InterruptedException, IOException, SmackException, XMPPException {
+    public synchronized XMPPTCPConnection createConnection() throws InterruptedException, IOException, SmackException, XMPPException {
         if (connection != null && connection.isConnected()) {
             // use existing working connection
             return connection;
@@ -164,7 +172,7 @@ public synchronized XMPPTCPConnection createConnection() throws InterruptedExcep
         // prepare for creating new connection
         connection = null;
 
-        log.trace("Creating new connection ...");
+        LOG.trace("Creating new connection ...");
         XMPPTCPConnection newConnection = createConnectionInternal();
 
         newConnection.connect();
@@ -174,11 +182,11 @@ public synchronized XMPPTCPConnection createConnection() throws InterruptedExcep
 
         if (!newConnection.isAuthenticated()) {
             if (user != null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Logging in to XMPP as user: {} on connection: {}", user, getConnectionMessage(newConnection));
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Logging in to XMPP as user: {} on connection: {}", user, getConnectionMessage(newConnection));
                 }
                 if (password == null) {
-                    log.warn("No password configured for user: {} on connection: {}", user, getConnectionMessage(newConnection));
+                    LOG.warn("No password configured for user: {} on connection: {}", user, getConnectionMessage(newConnection));
                 }
 
                 if (createAccount) {
@@ -193,8 +201,8 @@ public synchronized XMPPTCPConnection createConnection() throws InterruptedExcep
                     }
                 }
             } else {
-                if (log.isDebugEnabled()) {
-                    log.debug("Logging in anonymously to XMPP on connection: {}", getConnectionMessage(newConnection));
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Logging in anonymously to XMPP on connection: {}", getConnectionMessage(newConnection));
                 }
                 newConnection.login();
             }
@@ -203,7 +211,7 @@ public synchronized XMPPTCPConnection createConnection() throws InterruptedExcep
         }
 
         // okay new connection was created successfully so assign it as the connection
-        log.debug("Created new connection successfully: {}", newConnection);
+        LOG.debug("Created new connection successfully: {}", newConnection);
         connection = newConnection;
         return connection;
     }
@@ -368,6 +376,17 @@ public synchronized XMPPTCPConnection createConnection() throws InterruptedExcep
         this.room = room;
     }
 
+    /**
+     * Password for room
+     */
+    public void setRoomPassword(String roomPassword) {
+        this.roomPassword = roomPassword;
+    }
+
+    protected String getRoomPassword() {
+        return roomPassword;
+    }
+
     public String getParticipant() {
         // participant is optional so use user if not provided
         return participant != null ? participant : user;
@@ -402,6 +421,7 @@ public synchronized XMPPTCPConnection createConnection() throws InterruptedExcep
         return serviceName;
     }
 
+    @Override
     public HeaderFilterStrategy getHeaderFilterStrategy() {
         return headerFilterStrategy;
     }
@@ -409,6 +429,7 @@ public synchronized XMPPTCPConnection createConnection() throws InterruptedExcep
     /**
      * To use a custom HeaderFilterStrategy to filter header to and from Camel message.
      */
+    @Override
     public void setHeaderFilterStrategy(HeaderFilterStrategy headerFilterStrategy) {
         this.headerFilterStrategy = headerFilterStrategy;
     }

@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.file.remote;
 
+import org.apache.camel.Exchange;
 import org.apache.camel.component.file.GenericFileOperationFailedException;
 import org.apache.camel.component.file.GenericFileOperations;
 
@@ -28,10 +29,11 @@ public interface RemoteFileOperations<T> extends GenericFileOperations<T> {
      * Connects to the remote server
      *
      * @param configuration configuration
+     * @param exchange the exchange that trigger the connect (if any)
      * @return <tt>true</tt> if connected
      * @throws GenericFileOperationFailedException can be thrown
      */
-    boolean connect(RemoteFileConfiguration configuration) throws GenericFileOperationFailedException;
+    boolean connect(RemoteFileConfiguration configuration, Exchange exchange) throws GenericFileOperationFailedException;
 
     /**
      * Returns whether we are connected to the remote server or not
@@ -49,7 +51,8 @@ public interface RemoteFileOperations<T> extends GenericFileOperations<T> {
     void disconnect() throws GenericFileOperationFailedException;
 
     /**
-     * Forces a hard disconnect from the remote server and cause the client to be re-created on next poll.
+     * Forces a hard disconnect from the remote server and cause the client to
+     * be re-created on next poll.
      *
      * @throws GenericFileOperationFailedException can be thrown
      */
@@ -66,8 +69,9 @@ public interface RemoteFileOperations<T> extends GenericFileOperations<T> {
     /**
      * Sends a site command to the remote server
      *
-     * @param command  the command
-     * @return <tt>true</tt> if the command was a success, <tt>false</tt> otherwise
+     * @param command the command
+     * @return <tt>true</tt> if the command was a success, <tt>false</tt>
+     *         otherwise
      * @throws GenericFileOperationFailedException can be thrown
      */
     boolean sendSiteCommand(String command) throws GenericFileOperationFailedException;

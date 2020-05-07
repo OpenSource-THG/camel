@@ -26,7 +26,7 @@ import org.apache.gora.persistency.Persistent;
 import org.apache.gora.store.DataStore;
 
 /**
- * The gora component allows you to work with NoSQL databases using the Apache Gora framework.
+ * Access NoSQL databases using the Apache Gora framework.
  */
 @UriEndpoint(firstVersion = "2.14.0", scheme = "gora", title = "Gora", syntax = "gora:name", label = "database,hadoop,nosql")
 public class GoraEndpoint extends DefaultEndpoint {
@@ -65,6 +65,7 @@ public class GoraEndpoint extends DefaultEndpoint {
         return new GoraProducer(this, this.configuration, this.dataStore);
     }
 
+    @Override
     public Consumer createConsumer(final Processor processor) throws Exception {
         return new GoraConsumer(this, processor, this.configuration, this.dataStore);
     }

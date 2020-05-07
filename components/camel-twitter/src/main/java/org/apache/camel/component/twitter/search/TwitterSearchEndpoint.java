@@ -27,13 +27,13 @@ import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriPath;
 
 /**
- * The Twitter Search component consumes search results.
+ * Access Twitter Search.
  */
 @UriEndpoint(firstVersion = "2.10.0", scheme = "twitter-search", title = "Twitter Search", syntax = "twitter-search:keywords",
     label = "api,social")
 public class TwitterSearchEndpoint extends AbstractTwitterEndpoint {
 
-    @UriPath(description = "The search keywords. Multiple values can be separated with comma.")
+    @UriPath(description = "The search query, use the keywords AND, OR, - and () to narrow the search results.")
     @Metadata(required = true)
     private String keywords;
 

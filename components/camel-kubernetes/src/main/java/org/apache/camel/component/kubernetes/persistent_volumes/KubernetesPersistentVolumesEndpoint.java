@@ -22,14 +22,11 @@ import org.apache.camel.Producer;
 import org.apache.camel.component.kubernetes.AbstractKubernetesEndpoint;
 import org.apache.camel.component.kubernetes.KubernetesConfiguration;
 import org.apache.camel.spi.UriEndpoint;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * The Kubernetes Persistent Volumes component provides a producer to execute kubernetes persistent volume operations.
+ * Perform operations on Kubernetes Persistent Volumes and get notified on Persistent Volume changes.
  */
-@UriEndpoint(firstVersion = "2.17.0", scheme = "kubernetes-persistent-volumes", title = "Kubernetes Persistent Volume",
-    syntax = "kubernetes-persistent-volumes:masterUrl", producerOnly = true, label = "container,cloud,paas")
+@UriEndpoint(firstVersion = "2.17.0", scheme = "kubernetes-persistent-volumes", title = "Kubernetes Persistent Volume", syntax = "kubernetes-persistent-volumes:masterUrl", producerOnly = true, label = "container,cloud,paas")
 public class KubernetesPersistentVolumesEndpoint extends AbstractKubernetesEndpoint {
 
     public KubernetesPersistentVolumesEndpoint(String uri, KubernetesPersistentVolumesComponent component, KubernetesConfiguration config) {

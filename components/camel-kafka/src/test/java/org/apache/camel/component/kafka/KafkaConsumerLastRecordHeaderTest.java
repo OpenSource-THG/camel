@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.kafka;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -31,7 +32,7 @@ import org.junit.Test;
 public class KafkaConsumerLastRecordHeaderTest extends BaseEmbeddedKafkaTest {
     private static final String TOPIC = "last-record";
 
-    @EndpointInject(uri = "mock:result")
+    @EndpointInject("mock:result")
     private MockEndpoint result;
 
     private org.apache.kafka.clients.producer.KafkaProducer<String, String> producer;
@@ -47,12 +48,14 @@ public class KafkaConsumerLastRecordHeaderTest extends BaseEmbeddedKafkaTest {
         if (producer != null) {
             producer.close();
         }
+        // clean all test topics
+        kafkaAdminClient.deleteTopics(Collections.singletonList(TOPIC));
     }
 
     /**
-     * When consuming data with autoCommitEnable=false
-     * Then the LAST_RECORD_BEFORE_COMMIT header must be always defined
-     * And it should be true only for the last one
+     * When consuming data with autoCommitEnable=false Then the
+     * LAST_RECORD_BEFORE_COMMIT header must be always defined And it should be
+     * true only for the last one
      */
     @Test
     public void shouldStartFromBeginningWithEmptyOffsetRepository() throws InterruptedException {

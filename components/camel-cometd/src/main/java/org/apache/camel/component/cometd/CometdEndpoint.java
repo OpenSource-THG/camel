@@ -31,7 +31,7 @@ import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.util.ObjectHelper;
 
 /**
- * The cometd component is a transport for working with the Jetty implementation of the cometd/bayeux protocol.
+ * Offers publish/subscribe, peer-to-peer (via a server), and RPC style messaging using the CometD/Bayeux protocol.
  *
  * Using this component in combination with the dojo toolkit library it's possible to push Camel messages directly
  * into the browser using an AJAX based mechanism.
@@ -86,12 +86,14 @@ public class CometdEndpoint extends DefaultEndpoint {
         }
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         ObjectHelper.notNull(component, "component");
         CometdProducer producer = new CometdProducer(this);
         return producer;
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         ObjectHelper.notNull(component, "component");
         CometdConsumer consumer = new CometdConsumer(this, processor);
@@ -107,6 +109,7 @@ public class CometdEndpoint extends DefaultEndpoint {
         component.disconnect(prodcons);
     }
 
+    @Override
     public CometdComponent getComponent() {
         return component;
     }

@@ -41,8 +41,8 @@ public class WriteClientTest extends AbstractMiloServerTest {
     private static final String MILO_SERVER_ITEM_1 = "milo-server:myitem1";
     private static final String MILO_SERVER_ITEM_2 = "milo-server:myitem2";
 
-    private static final String MILO_CLIENT_BASE_C1 = "milo-client:tcp://foo:bar@localhost:@@port@@";
-    private static final String MILO_CLIENT_BASE_C2 = "milo-client:tcp://foo2:bar2@localhost:@@port@@";
+    private static final String MILO_CLIENT_BASE_C1 = "milo-client:opc.tcp://foo:bar@localhost:@@port@@";
+    private static final String MILO_CLIENT_BASE_C2 = "milo-client:opc.tcp://foo2:bar2@localhost:@@port@@";
 
     private static final String MILO_CLIENT_ITEM_C1_1 = MILO_CLIENT_BASE_C1 + "?node=" + nodeValue(MiloServerComponent.DEFAULT_NAMESPACE_URI, "items-myitem1")
                                                         + "&overrideHost=true";
@@ -57,22 +57,22 @@ public class WriteClientTest extends AbstractMiloServerTest {
     private static final String MOCK_TEST_1 = "mock:test1";
     private static final String MOCK_TEST_2 = "mock:test2";
 
-    @EndpointInject(uri = MOCK_TEST_1)
+    @EndpointInject(MOCK_TEST_1)
     protected MockEndpoint test1Endpoint;
 
-    @EndpointInject(uri = MOCK_TEST_2)
+    @EndpointInject(MOCK_TEST_2)
     protected MockEndpoint test2Endpoint;
 
-    @Produce(uri = DIRECT_START_1)
+    @Produce(DIRECT_START_1)
     protected ProducerTemplate producer1;
 
-    @Produce(uri = DIRECT_START_2)
+    @Produce(DIRECT_START_2)
     protected ProducerTemplate producer2;
 
-    @Produce(uri = DIRECT_START_3)
+    @Produce(DIRECT_START_3)
     protected ProducerTemplate producer3;
 
-    @Produce(uri = DIRECT_START_4)
+    @Produce(DIRECT_START_4)
     protected ProducerTemplate producer4;
 
     @Override

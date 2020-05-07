@@ -24,7 +24,6 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
@@ -37,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The jgroups component provides exchange of messages between Camel and JGroups clusters.
+ * Exchange messages with JGroups-raft clusters.
  */
 @UriEndpoint(firstVersion = "2.24.0", scheme = "jgroups-raft", title = "JGroups raft", syntax = "jgroup-raft:clusterName", label = "clustering,messaging")
 public class JGroupsRaftEndpoint extends DefaultEndpoint {

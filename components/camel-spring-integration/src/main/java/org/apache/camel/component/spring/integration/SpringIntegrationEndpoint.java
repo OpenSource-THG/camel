@@ -28,7 +28,7 @@ import org.apache.camel.support.DefaultEndpoint;
 import org.springframework.messaging.MessageChannel;
 
 /**
- * Bridges Camel with Spring Integration.
+ * Bridge Camel with Spring Integration.
  */
 @UriEndpoint(firstVersion = "1.4.0", scheme = "spring-integration", title = "Spring Integration", syntax = "spring-integration:defaultChannel",
         label = "spring,eventbus")
@@ -48,10 +48,12 @@ public class SpringIntegrationEndpoint extends DefaultEndpoint {
         this.defaultChannel = channel;
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         return new SpringIntegrationProducer((SpringCamelContext) getCamelContext(), this);
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         SpringIntegrationConsumer answer = new SpringIntegrationConsumer(this, processor);
         configureConsumer(answer);
@@ -95,10 +97,6 @@ public class SpringIntegrationEndpoint extends DefaultEndpoint {
     @Deprecated
     public MessageChannel getMessageChannel() {
         return messageChannel;
-    }
-
-    public boolean isSingleton() {
-        return false;
     }
 
     /**

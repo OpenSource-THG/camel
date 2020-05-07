@@ -29,7 +29,7 @@ import org.apache.camel.spi.UriPath;
 import org.openstack4j.core.transport.Config;
 
 /**
- * The openstack-neutron component allows messages to be sent to an OpenStack network services.
+ * Access OpenStack Neutron for network services.
  */
 @UriEndpoint(firstVersion = "2.19.0", scheme = "openstack-neutron", title = "OpenStack Neutron", syntax = "openstack-neutron:host", label = "cloud,paas", producerOnly = true)
 public class NeutronEndpoint extends AbstractOpenstackEndpoint {
@@ -71,16 +71,16 @@ public class NeutronEndpoint extends AbstractOpenstackEndpoint {
     @Override
     public Producer createProducer() throws Exception {
         switch (getSubsystem()) {
-        case NeutronConstants.NEUTRON_NETWORK_SUBSYSTEM:
-            return new NetworkProducer(this, createClient());
-        case NeutronConstants.NEUTRON_SUBNETS_SYSTEM:
-            return new SubnetProducer(this, createClient());
-        case NeutronConstants.NEUTRON_PORT_SYSTEM:
-            return new PortProducer(this, createClient());
-        case NeutronConstants.NEUTRON_ROUTER_SYSTEM:
-            return new RouterProducer(this, createClient());
-        default:
-            throw new IllegalArgumentException("Can't create producer with subsystem " + subsystem);
+            case NeutronConstants.NEUTRON_NETWORK_SUBSYSTEM:
+                return new NetworkProducer(this, createClient());
+            case NeutronConstants.NEUTRON_SUBNETS_SYSTEM:
+                return new SubnetProducer(this, createClient());
+            case NeutronConstants.NEUTRON_PORT_SYSTEM:
+                return new PortProducer(this, createClient());
+            case NeutronConstants.NEUTRON_ROUTER_SYSTEM:
+                return new RouterProducer(this, createClient());
+            default:
+                throw new IllegalArgumentException("Can't create producer with subsystem " + subsystem);
         }
     }
 
@@ -167,6 +167,7 @@ public class NeutronEndpoint extends AbstractOpenstackEndpoint {
         this.host = host;
     }
 
+    @Override
     public Config getConfig() {
         return config;
     }
@@ -178,6 +179,7 @@ public class NeutronEndpoint extends AbstractOpenstackEndpoint {
         this.config = config;
     }
 
+    @Override
     public String getApiVersion() {
         return apiVersion;
     }

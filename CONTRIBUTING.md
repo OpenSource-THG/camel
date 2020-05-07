@@ -16,6 +16,7 @@ There are many ways you can help make Camel a better piece of software - please 
 - [If you find a bug or problem](#if-you-find-a-bug-or-problem)
 - [Working on the code](#working-on-the-code)
 - [Running checkstyle](#running-checkstyle)
+- [Verify Karaf features](#verify-karaf-features)
 - [Apache Camel committers should work on the ASF git repo](#apache-camel-committers-should-work-on-the—asf-git-repo)
 - [Creating patches](#creating-patches)
 - [Pull request at Github](#pull-request-at-github)
@@ -38,14 +39,17 @@ There are various ways of communicating with the Camel community.
 
 Documentation is massively important to help users make the most of Apache Camel and its probably the area that needs the most help!
 So if you are interested in helping the documentation effort; whether its just to fix a page here or there, correct a link or even write a tutorial or improve what documentation is already there please do dive in and help!
-Most of the documentation is stored on the wiki. We are currently moving the documentation into the code (AsciiDoc). From there it is automatically converted to the wiki. So before editing the wiki check the code because otherwise your changes may be lost. This transition is work-in-progress.
+We moved the documentation into the code (AsciiDoc). We are not using the wiki system anymore.
 
-See [How does the website work](http://camel.apache.org/how-does-the-website-work.html) or [How do I edit the website for more details](http://camel.apache.org/how-do-i-edit-the-website.html).
-To be able to edit the wiki you need
-- an appropriate licence agreement on file with the ASF
-- an account on the wiki (on the bottom of each page there is an edit button, that allows you to create an account)
-- karma - mail the dev list asking for permission (to prevent spam we only offer access to the wiki by folks sending mail to the mailing list).
+To edit the documentation:
+- It's easy as opening a Pull Request
+- You'll find on each component under src/main/docs an .adoc file
+   - This file contains a static part and a dynamically generated part: the former can be edited directly in the .adoc file, while the latter needs your intervention on the javadoc
+   - Once you modify the javadoc, you'll need to rebuild the component and the .adoc will be automatically updated
+   - Create a commit and raise a Pull Request
+- If you want to add more documentation check for .adoc in codebase 
 
+For more information see [How does the website work](https://camel.apache.org/manual/latest/faq/how-does-the-website-work.html) or [How do I edit the website for more details](https://camel.apache.org/manual/latest/faq/how-do-i-edit-the-website.html).
 
 ## If you find a bug or problem
 
@@ -81,6 +85,17 @@ Please remember to run this check on your code changes before submitting a patch
     cd camel-ftp
     mvn clean install -Psourcecheck
 
+## Verify Karaf features
+
+Camel-Karaf lives now in his own repository, so to verify a Karaf feature you'll need to fork the following [repository](https://github.com/apache/camel-karaf).
+
+To check a new Karaf feature or an existing one you should run a verification on the features.xml file. You'll need to follow these steps:
+First thing to be done is running a full build of Camel. Then
+
+    cd platform/karaf/features/
+    mvn clean install
+
+If you modified a component/dataformat or updated a dependency in the main camel repository, you'll first need to build the main camel locally and then run a full build of camel-karaf.
 
 ## Apache Camel committers should work on the ASF git repo
 
@@ -149,7 +164,7 @@ Before you can raise an issue in the [issue tracker](https://issues.apache.org/j
 
 Once you've got involved as above, we may well invite you to be a committer. See [How do I become a committer](http://camel.apache.org/how-do-i-become-a-committer.html) for more details.
 
-The first step is contributing to the project; if you want to take that a step forward and become a fellow committer on the project then see the [Committer Guide](http://activemq.apache.org/becoming-a-committer.html)
+The first step is contributing to the project; if you want to take that a step forward and become a fellow committer on the project then see the [Committer Guide](https://camel.apache.org/manual/latest/faq/how-do-i-become-a-committer.html)
 
 
 ## More resources

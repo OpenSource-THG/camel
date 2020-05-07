@@ -22,8 +22,12 @@ import java.util.function.Supplier;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
+import org.apache.camel.ExchangePattern;
 import org.apache.camel.Expression;
+import org.apache.camel.ExpressionFactory;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
+import org.apache.camel.Route;
 import org.apache.camel.cloud.ServiceChooser;
 import org.apache.camel.cloud.ServiceChooserAware;
 import org.apache.camel.cloud.ServiceDiscovery;
@@ -32,12 +36,11 @@ import org.apache.camel.cloud.ServiceExpressionFactory;
 import org.apache.camel.cloud.ServiceFilter;
 import org.apache.camel.cloud.ServiceFilterAware;
 import org.apache.camel.cloud.ServiceLoadBalancer;
-import org.apache.camel.impl.TypedProcessorFactory;
-import org.apache.camel.model.ModelCamelContext;
+import org.apache.camel.impl.engine.TypedProcessorFactory;
+import org.apache.camel.model.Model;
 import org.apache.camel.model.cloud.ServiceCallConfigurationDefinition;
 import org.apache.camel.model.cloud.ServiceCallDefinition;
 import org.apache.camel.model.cloud.ServiceCallDefinitionConstants;
-import org.apache.camel.spi.RouteContext;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.function.Suppliers;
@@ -59,10 +62,10 @@ public class ServiceCallProcessorFactory extends TypedProcessorFactory<ServiceCa
     // *****************************
 
     @Override
-    public Processor doCreateProcessor(RouteContext routeContext, ServiceCallDefinition definition) throws Exception {
+    public Processor doCreateProcessor(Route route, ServiceCallDefinition definition) throws Exception {
         this.definition = definition;
 
-        final CamelContext camelContext = routeContext.getCamelContext();
+        final CamelContext camelContext = route.getCamelContext();
         final ServiceDiscovery serviceDiscovery = retrieveServiceDiscovery(camelContext);
         final ServiceFilter serviceFilter = retrieveServiceFilter(camelContext);
         final ServiceChooser serviceChooser = retrieveServiceChooser(camelContext);
@@ -123,9 +126,14 @@ public class ServiceCallProcessorFactory extends TypedProcessorFactory<ServiceCa
 
         endpointScheme = ThrowingHelper.applyIfNotEmpty(endpointScheme, camelContext::resolvePropertyPlaceholders, () -> ServiceCallDefinitionConstants.DEFAULT_COMPONENT);
         endpointUri = ThrowingHelper.applyIfNotEmpty(endpointUri, camelContext::resolvePropertyPlaceholders, () -> null);
+        ExchangePattern pattern = CamelContextHelper.parse(camelContext, ExchangePattern.class, definition.getPattern());
 
-        return new DefaultServiceCallProcessor(camelContext, camelContext.resolvePropertyPlaceholders(definition.getName()), endpointScheme, endpointUri, definition.getPattern(),
-                                               loadBalancer, retrieveExpression(camelContext, endpointScheme));
+        Expression expression = retrieveExpression(camelContext, endpointScheme);
+        if (expression instanceof ExpressionFactory) {
+            expression = ((ExpressionFactory) expression).createExpression(camelContext);
+        }
+        return new DefaultServiceCallProcessor(camelContext, camelContext.resolvePropertyPlaceholders(definition.getName()), endpointScheme, endpointUri, pattern,
+                                               loadBalancer, expression);
     }
 
     // *****************************
@@ -134,7 +142,7 @@ public class ServiceCallProcessorFactory extends TypedProcessorFactory<ServiceCa
 
     private ServiceCallConfigurationDefinition retrieveDefaultConfig(CamelContext camelContext) {
         // check if a default configuration is bound to the registry
-        ServiceCallConfigurationDefinition config = camelContext.adapt(ModelCamelContext.class).getServiceCallConfiguration(null);
+        ServiceCallConfigurationDefinition config = camelContext.getExtension(Model.class).getServiceCallConfiguration(null);
 
         if (config == null) {
             // Or if it is in the registry
@@ -158,7 +166,7 @@ public class ServiceCallProcessorFactory extends TypedProcessorFactory<ServiceCa
             config = lookup(camelContext, definition.getConfigurationRef(), ServiceCallConfigurationDefinition.class);
             if (config == null) {
                 // and fallback as service configuration
-                config = camelContext.adapt(ModelCamelContext.class).getServiceCallConfiguration(definition.getConfigurationRef());
+                config = camelContext.getExtension(Model.class).getServiceCallConfiguration(definition.getConfigurationRef());
             }
         }
 
@@ -383,13 +391,13 @@ public class ServiceCallProcessorFactory extends TypedProcessorFactory<ServiceCa
 
                 try {
                     // Then use Service factory.
-                    type = camelContext.getFactoryFinder(ServiceCallDefinitionConstants.RESOURCE_PATH).findClass(lookupName);
+                    type = camelContext.adapt(ExtendedCamelContext.class).getFactoryFinder(ServiceCallDefinitionConstants.RESOURCE_PATH).findClass(lookupName).orElse(null);
                 } catch (Exception e) {
                 }
 
                 if (ObjectHelper.isNotEmpty(type)) {
                     if (ServiceExpressionFactory.class.isAssignableFrom(type)) {
-                        factory = (ServiceExpressionFactory)camelContext.getInjector().newInstance(type);
+                        factory = (ServiceExpressionFactory)camelContext.getInjector().newInstance(type, false);
                     } else {
                         throw new IllegalArgumentException("Resolving Expression: " + lookupName + " detected type conflict: Not a ServiceExpressionFactory implementation. Found: "
                                                            + type.getName());

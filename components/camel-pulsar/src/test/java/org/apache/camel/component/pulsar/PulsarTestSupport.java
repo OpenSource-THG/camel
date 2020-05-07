@@ -22,25 +22,23 @@ import org.testcontainers.containers.GenericContainer;
 
 public class PulsarTestSupport extends ContainerAwareTestSupport {
 
-    public static final String CONTAINER_IMAGE = "apachepulsar/pulsar:2.2.0";
+    public static final String CONTAINER_IMAGE = "apachepulsar/pulsar:2.5.1";
     public static final String CONTAINER_NAME = "pulsar";
     public static final int BROKER_PORT = 6650;
     public static final int BROKER_HTTP_PORT = 8080;
-    public static final String METRICS_ENDPOINT = "/metrics";
-    
+    public static final String WAIT_FOR_ENDPOINT = "/admin/v2/namespaces/public";
+
     @Override
     protected GenericContainer<?> createContainer() {
         return pulsarContainer();
     }
 
     public static GenericContainer pulsarContainer() {
-        return new GenericContainer(CONTAINER_IMAGE)
-            .withNetworkAliases(CONTAINER_NAME)
-            .withExposedPorts(BROKER_PORT, BROKER_HTTP_PORT)
+        return new GenericContainer(CONTAINER_IMAGE).withNetworkAliases(CONTAINER_NAME).withExposedPorts(BROKER_PORT, BROKER_HTTP_PORT)
             .withCommand("/pulsar/bin/pulsar", "standalone", "--no-functions-worker", "-nss")
-            .waitingFor(Wait.forHttp(METRICS_ENDPOINT).forStatusCode(200).forPort(BROKER_HTTP_PORT));
+            .waitingFor(Wait.forHttp(WAIT_FOR_ENDPOINT).forStatusCode(200).forPort(BROKER_HTTP_PORT));
     }
-    
+
     public String getPulsarBrokerUrl() {
         return String.format("pulsar://%s:%s", getContainer(CONTAINER_NAME).getContainerIpAddress(), getContainer(CONTAINER_NAME).getMappedPort(BROKER_PORT));
     }

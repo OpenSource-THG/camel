@@ -17,6 +17,7 @@
 package org.apache.camel.component.cxf;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.component.cxf.CxfEndpoint.CamelCxfClientImpl;
@@ -56,6 +57,8 @@ public class CxfEndpointTest extends Assert {
     @Test
     public void testSettingContinucationTimout() throws Exception {
         CamelContext context = new DefaultCamelContext();
+        context.start();
+
         CxfEndpoint endpoint = context.getEndpoint(routerEndpointURI + "&continuationTimeout=800000",
                 CxfEndpoint.class);
         assertEquals("Get a wrong continucationTimeout value", 800000, endpoint.getContinuationTimeout());
@@ -66,7 +69,11 @@ public class CxfEndpointTest extends Assert {
 
         ClassPathXmlApplicationContext ctx =
                 new ClassPathXmlApplicationContext(new String[]{"org/apache/camel/component/cxf/CxfEndpointBeans.xml"});
-        CxfComponent cxfComponent = new CxfComponent(new SpringCamelContext(ctx));
+
+        SpringCamelContext context = new SpringCamelContext(ctx);
+        context.start();
+
+        CxfComponent cxfComponent = new CxfComponent(context);
         CxfSpringEndpoint endpoint = (CxfSpringEndpoint)cxfComponent.createEndpoint("cxf://bean:serviceEndpoint");
 
         assertEquals("Got the wrong endpoint address", endpoint.getAddress(),
@@ -84,7 +91,11 @@ public class CxfEndpointTest extends Assert {
 
         ExtensionManagerBus newBus = (ExtensionManagerBus) BusFactory.newInstance().createBus();
         newBus.setId("newCXF");
-        CxfComponent cxfComponent = new CxfComponent(new DefaultCamelContext());
+
+        CamelContext context = new DefaultCamelContext();
+        context.start();
+
+        CxfComponent cxfComponent = new CxfComponent(context);
         CxfEndpoint endpoint = (CxfEndpoint)cxfComponent.createEndpoint(routerEndpointURI);
         endpoint.setBus(newBus);
         CamelCxfClientImpl client = (CamelCxfClientImpl)endpoint.createClient();
@@ -99,14 +110,18 @@ public class CxfEndpointTest extends Assert {
     @Test
     public void testCxfEndpointConfigurer() throws Exception {
         SimpleRegistry registry = new SimpleRegistry();
-        CxfEndpointConfigurer configurer = mock(CxfEndpointConfigurer.class);
+        CxfConfigurer configurer = mock(CxfConfigurer.class);
         Processor processor = mock(Processor.class);
         registry.bind("myConfigurer", configurer);
         CamelContext camelContext = new DefaultCamelContext(registry);
-        CxfComponent cxfComponent = new CxfComponent(camelContext);
-        CxfEndpoint endpoint = (CxfEndpoint)cxfComponent.createEndpoint(routerEndpointURI + "&cxfEndpointConfigurer=#myConfigurer");
+        camelContext.start();
 
-        endpoint.createConsumer(processor);
+        CxfComponent cxfComponent = new CxfComponent(camelContext);
+        CxfEndpoint endpoint = (CxfEndpoint)cxfComponent.createEndpoint(routerEndpointURI + "&cxfConfigurer=#myConfigurer");
+
+        Consumer consumer = endpoint.createConsumer(processor);
+        consumer.start();
+
         verify(configurer).configure(isA(AbstractWSDLBasedEndpointFactory.class));
         verify(configurer).configureServer(isA(Server.class));
         

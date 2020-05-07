@@ -32,10 +32,11 @@ import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 
 /**
- * To use a HTTP Servlet as entry for Camel routes when running in a servlet container.
+ * Serve HTTP requests by a Servlet.
  */
 @UriEndpoint(firstVersion = "2.0.0", scheme = "servlet", extendsScheme = "http", title = "Servlet",
         syntax = "servlet:contextPath", consumerOnly = true, label = "http")
+@Metadata(excludeProperties = "httpUri")
 public class ServletEndpoint extends HttpCommonEndpoint {
 
     private HttpBinding binding;
@@ -74,6 +75,7 @@ public class ServletEndpoint extends HttpCommonEndpoint {
             }
             this.binding.setFileNameExtWhitelist(getFileNameExtWhitelist());
             this.binding.setTransferException(isTransferException());
+            this.binding.setMuteException(isMuteException());
             if (getComponent() != null) {
                 this.binding.setAllowJavaSerializedObject(getComponent().isAllowJavaSerializedObject());
             }
@@ -145,7 +147,7 @@ public class ServletEndpoint extends HttpCommonEndpoint {
 
     @Override
     public Producer createProducer() throws Exception {
-        throw new UnsupportedOperationException("You cannot create producer with servlet endpoint, please consider to use http or http4 endpoint.");
+        throw new UnsupportedOperationException("You cannot create producer with servlet endpoint, please consider to use http endpoint.");
     }
 
     @Override

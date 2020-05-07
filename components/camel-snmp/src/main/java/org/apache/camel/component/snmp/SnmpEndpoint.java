@@ -27,21 +27,25 @@ import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultPollingEndpoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snmp4j.CommandResponderEvent;
 import org.snmp4j.PDU;
 import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.security.SecurityLevel;
 
 /**
- * The snmp component gives you the ability to poll SNMP capable devices or receiving traps.
+ * Receive traps and poll SNMP (Simple Network Management Protocol) capable devices.
  */
-@UriEndpoint(firstVersion = "2.1.0", scheme = "snmp", title = "SNMP", syntax = "snmp:host:port", consumerOnly = true, label = "monitoring")
+@UriEndpoint(firstVersion = "2.1.0", scheme = "snmp", title = "SNMP", syntax = "snmp:host:port", label = "monitoring")
 public class SnmpEndpoint extends DefaultPollingEndpoint {
 
     public static final String DEFAULT_COMMUNITY = "public";
     public static final int DEFAULT_SNMP_VERSION = SnmpConstants.version1;
     public static final int DEFAULT_SNMP_RETRIES = 2;
     public static final int DEFAULT_SNMP_TIMEOUT = 1500;
+
+    private static final Logger LOG = LoggerFactory.getLogger(SnmpEndpoint.class);
 
     private transient String address;
 
@@ -79,7 +83,7 @@ public class SnmpEndpoint extends DefaultPollingEndpoint {
     private String snmpContextName;
     @UriParam
     private String snmpContextEngineId;
-    @UriParam(javaType = "java.lang.String")
+    @UriParam
     private OIDList oids = new OIDList();
     @UriParam(label = "consumer", defaultValue = "false")
     private boolean treeList;
@@ -94,6 +98,7 @@ public class SnmpEndpoint extends DefaultPollingEndpoint {
         super(uri, component);
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         if (this.type == SnmpActionType.TRAP) {
             SnmpTrapConsumer answer = new SnmpTrapConsumer(this, processor);
@@ -108,15 +113,17 @@ public class SnmpEndpoint extends DefaultPollingEndpoint {
         }
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         if (this.type == SnmpActionType.TRAP) {
             return new SnmpTrapProducer(this);
         } else {
-            return new SnmpProducer(this);
+            // add the support: snmp walk (use snmp4j GET_NEXT)
+            return new SnmpProducer(this, this.type);
         }
     }
 
-/**
+    /**
      * creates an exchange for the given message
      *
      * @param pdu the pdu
@@ -152,6 +159,7 @@ public class SnmpEndpoint extends DefaultPollingEndpoint {
         // noop
     }
 
+    @Override
     public long getDelay() {
         return delay;
     }
@@ -273,10 +281,9 @@ public class SnmpEndpoint extends DefaultPollingEndpoint {
             }
         }
 
-
         // set the address
         String address = String.format("%s:%s/%d", getProtocol(), host, port);
-        log.debug("Using snmp address {}", address);
+        LOG.debug("Using snmp address {}", address);
         setAddress(address);
     }
 

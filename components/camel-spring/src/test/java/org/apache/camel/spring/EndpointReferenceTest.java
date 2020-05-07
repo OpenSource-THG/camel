@@ -18,12 +18,12 @@ package org.apache.camel.spring;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NoSuchEndpointException;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.impl.DefaultRouteContext;
 import org.apache.camel.model.RouteDefinition;
-import org.apache.camel.spi.RouteContext;
 import org.apache.camel.spring.example.DummyBean;
+import org.apache.camel.support.CamelContextHelper;
 import org.junit.Test;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -57,6 +57,7 @@ public class EndpointReferenceTest extends SpringTestSupport {
         resultEndpoint.assertIsSatisfied();
     }
 
+    @Override
     protected SpringCamelContext createCamelContext() {
         return applicationContext.getBean("camel", SpringCamelContext.class);
     }
@@ -74,15 +75,17 @@ public class EndpointReferenceTest extends SpringTestSupport {
     @Test
     public void testReferenceEndpointFromOtherCamelContext() throws Exception {
         CamelContext context = applicationContext.getBean("camel2", CamelContext.class);
-        RouteContext routeContext = new DefaultRouteContext(context, new RouteDefinition("temporary"), null);
+        RouteDefinition route = new RouteDefinition("temporary");
+        String routeId = route.idOrCreate(context.adapt(ExtendedCamelContext.class).getNodeIdFactory());
         try {
-            routeContext.resolveEndpoint(null, "endpoint1");
+            CamelContextHelper.resolveEndpoint(context, null, "endpoint1");
             fail("Should have thrown exception");
         } catch (NoSuchEndpointException exception) {
             assertTrue("Get a wrong exception message", exception.getMessage().contains("make sure the endpoint has the same camel context as the route does"));
         }
     }
 
+    @Override
     protected AbstractXmlApplicationContext createApplicationContext() {
         return new ClassPathXmlApplicationContext("org/apache/camel/spring/endpointReference.xml");
     }

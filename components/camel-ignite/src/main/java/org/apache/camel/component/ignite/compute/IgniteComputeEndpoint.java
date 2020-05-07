@@ -31,9 +31,10 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCompute;
 
 /**
- * The Ignite Compute endpoint is one of camel-ignite endpoints which allows you to run
- * <a href="https://apacheignite.readme.io/docs/compute-grid">compute operations</a>
- * on the cluster by passing in an IgniteCallable, an IgniteRunnable, an IgniteClosure,
+ * Run <a href="https://apacheignite.readme.io/docs/compute-grid">compute operations</a>
+ * on an Ignite cluster.
+ * 
+ * You can pass an IgniteCallable, an IgniteRunnable, an IgniteClosure,
  * or collections of them, along with their parameters if necessary.
  * This endpoint only supports producers.
  */
@@ -89,8 +90,6 @@ public class IgniteComputeEndpoint extends AbstractIgniteEndpoint {
 
     /**
      * Gets the endpoint ID.
-     * 
-     * @return endpoint ID (not used)
      */
     public String getEndpointId() {
         return endpointId;
@@ -98,8 +97,6 @@ public class IgniteComputeEndpoint extends AbstractIgniteEndpoint {
 
     /**
      * The endpoint ID (not used).
-     * 
-     * @param endpointId endpoint ID (not used)
      */
     public void setEndpointId(String endpointId) {
         this.endpointId = endpointId;
@@ -107,8 +104,6 @@ public class IgniteComputeEndpoint extends AbstractIgniteEndpoint {
 
     /**
      * Gets the cluster group expression.
-     * 
-     * @return cluster group expression
      */
     public ClusterGroupExpression getClusterGroupExpression() {
         return clusterGroupExpression;
@@ -116,8 +111,6 @@ public class IgniteComputeEndpoint extends AbstractIgniteEndpoint {
 
     /**
      * An expression that returns the Cluster Group for the IgniteCompute instance.
-     * 
-     * @param clusterGroupExpression cluster group expression
      */
     public void setClusterGroupExpression(ClusterGroupExpression clusterGroupExpression) {
         this.clusterGroupExpression = clusterGroupExpression;
@@ -125,8 +118,6 @@ public class IgniteComputeEndpoint extends AbstractIgniteEndpoint {
 
     /**
      * Gets the execution type of this producer.
-     * 
-     * @return
      */
     public IgniteComputeExecutionType getExecutionType() {
         return executionType;
@@ -136,8 +127,6 @@ public class IgniteComputeEndpoint extends AbstractIgniteEndpoint {
      * The compute operation to perform. Possible values: CALL, BROADCAST, APPLY,
      *  EXECUTE, RUN, AFFINITY_CALL, AFFINITY_RUN.
      * The component expects different payload types depending on the operation.
-     * 
-     * @param executionType
      */
     public void setExecutionType(IgniteComputeExecutionType executionType) {
         this.executionType = executionType;
@@ -145,8 +134,6 @@ public class IgniteComputeEndpoint extends AbstractIgniteEndpoint {
 
     /**
      * Gets the task name, only applicable if using the {@link IgniteComputeExecutionType#EXECUTE} execution type.
-     * 
-     * @return
      */
     public String getTaskName() {
         return taskName;
@@ -154,17 +141,13 @@ public class IgniteComputeEndpoint extends AbstractIgniteEndpoint {
 
     /**
      * The task name, only applicable if using the {@link IgniteComputeExecutionType#EXECUTE} execution type.
-     * 
-     * @param taskName
      */
     public void setTaskName(String taskName) {
         this.taskName = taskName;
     }
 
     /**
-     * Gets the name of the compute job, which will be set via {@link IgniteCompute#withName(String)}. 
-     * 
-     * @return
+     * Gets the name of the compute job, which will be set via {@link IgniteCompute#withName(String)}.
      */
     public String getComputeName() {
         return computeName;
@@ -172,8 +155,6 @@ public class IgniteComputeEndpoint extends AbstractIgniteEndpoint {
 
     /**
      * The name of the compute job, which will be set via {@link IgniteCompute#withName(String)}.
-     * 
-     * @param computeName
      */
     public void setComputeName(String computeName) {
         this.computeName = computeName;
@@ -181,8 +162,6 @@ public class IgniteComputeEndpoint extends AbstractIgniteEndpoint {
 
     /**
      * Gets the timeout interval for triggered jobs, in milliseconds, which will be set via {@link IgniteCompute#withTimeout(long)}.
-     * 
-     * @return
      */
     public Long getTimeoutMillis() {
         return timeoutMillis;
@@ -190,8 +169,6 @@ public class IgniteComputeEndpoint extends AbstractIgniteEndpoint {
 
     /**
      * The timeout interval for triggered jobs, in milliseconds, which will be set via {@link IgniteCompute#withTimeout(long)}.
-     * 
-     * @param timeoutMillis
      */
     public void setTimeoutMillis(Long timeoutMillis) {
         this.timeoutMillis = timeoutMillis;

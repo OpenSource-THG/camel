@@ -31,7 +31,7 @@ import org.apache.camel.util.UnsafeUriCharactersEncoder;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * The sql component allows you to work with databases using JDBC Stored Procedure queries.
+ * Perform SQL queries as a JDBC Stored Procedures using Spring JDBC.
  */
 @UriEndpoint(firstVersion = "2.17.0", scheme = "sql-stored", title = "SQL Stored Procedure", syntax = "sql-stored:template", producerOnly = true, label = "database,sql")
 public class SqlStoredEndpoint extends DefaultEndpoint {
@@ -63,6 +63,7 @@ public class SqlStoredEndpoint extends DefaultEndpoint {
         setJdbcTemplate(jdbcTemplate);
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         return new SqlStoredProducer(this);
     }
@@ -76,6 +77,10 @@ public class SqlStoredEndpoint extends DefaultEndpoint {
     protected String createEndpointUri() {
         // Make sure it's properly encoded
         return "sql-stored:" + UnsafeUriCharactersEncoder.encode(this.template);
+    }
+
+    protected CallableStatementWrapperFactory getWrapperFactory() {
+        return wrapperFactory;
     }
 
     @Override
@@ -156,12 +161,4 @@ public class SqlStoredEndpoint extends DefaultEndpoint {
         this.function = function;
     }
 
-    @Override
-    public boolean isSingleton() {
-        return false;
-    }
-
-    public CallableStatementWrapperFactory getWrapperFactory() {
-        return wrapperFactory;
-    }
 }

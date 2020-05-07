@@ -32,7 +32,7 @@ import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
 
 /**
- * The crypto component is used for signing and verifying exchanges using the Signature Service of the Java Cryptographic Extension (JCE).
+ * Sign and verify exchanges using the Signature Service of the Java Cryptographic Extension (JCE).
  */
 @UriEndpoint(firstVersion = "2.3.0", scheme = "crypto", title = "Crypto (JCE)", syntax = "crypto:cryptoOperation:name", producerOnly = true, label = "security,transformation")
 public class DigitalSignatureEndpoint extends DefaultEndpoint {
@@ -44,6 +44,7 @@ public class DigitalSignatureEndpoint extends DefaultEndpoint {
         this.configuration = configuration;
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         if (CryptoOperation.sign == configuration.getCryptoOperation()) {
             return new DigitalSignatureProducer(this, new SigningProcessor(configuration));
@@ -52,11 +53,12 @@ public class DigitalSignatureEndpoint extends DefaultEndpoint {
         }
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         throw new UnsupportedOperationException("Digital Signatures endpoints are not meant to be consumed from. They are meant be used as an intermediate endpoints");
     }
 
-/**
+    /**
      * Sets the configuration to use
      */
     public void setConfiguration(DigitalSignatureConfiguration configuration) {
@@ -99,11 +101,11 @@ public class DigitalSignatureEndpoint extends DefaultEndpoint {
         getConfiguration().setKeystore(keystore);
     }
 
-    public char[] getPassword() {
+    public String getPassword() {
         return getConfiguration().getPassword();
     }
 
-    public void setKeyPassword(char[] keyPassword) {
+    public void setKeyPassword(String keyPassword) {
         getConfiguration().setPassword(keyPassword);
     }
 

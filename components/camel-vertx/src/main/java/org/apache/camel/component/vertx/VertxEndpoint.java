@@ -30,7 +30,7 @@ import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
 
 /**
- * The vertx component is used for sending and receive messages from a vertx event bus.
+ * Send and receive messages to/from Vert.x Event Bus.
  */
 @UriEndpoint(firstVersion = "2.12.0", scheme = "vertx", title = "Vert.x", syntax = "vertx:address", label = "eventbus,reactive")
 public class VertxEndpoint extends DefaultEndpoint implements AsyncEndpoint, MultipleConsumersSupport {
@@ -50,10 +50,12 @@ public class VertxEndpoint extends DefaultEndpoint implements AsyncEndpoint, Mul
         return (VertxComponent) super.getComponent();
     }
 
+    @Override
     public Producer createProducer() throws Exception {
         return new VertxProducer(this);
     }
 
+    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         VertxConsumer consumer = new VertxConsumer(this, processor);
         configureConsumer(consumer);

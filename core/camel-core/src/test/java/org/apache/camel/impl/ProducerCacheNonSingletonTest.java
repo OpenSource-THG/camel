@@ -25,6 +25,7 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
+import org.apache.camel.impl.engine.DefaultProducerCache;
 import org.apache.camel.support.DefaultAsyncProducer;
 import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.support.DefaultEndpoint;
@@ -41,11 +42,11 @@ public class ProducerCacheNonSingletonTest extends ContextTestSupport {
     public void testNonSingleton() throws Exception {
         context.addComponent("dummy", new MyDummyComponent());
 
-        DefaultProducerCache cache = new DefaultProducerCache(this, context, -1);
+        DefaultProducerCache cache = new DefaultProducerCache(this, context, 100);
         cache.start();
 
         Endpoint endpoint = context.getEndpoint("dummy:foo");
-        DefaultAsyncProducer producer = (DefaultAsyncProducer) cache.acquireProducer(endpoint);
+        DefaultAsyncProducer producer = (DefaultAsyncProducer)cache.acquireProducer(endpoint);
         assertNotNull(producer);
         assertTrue("Should be started", producer.getStatus().isStarted());
 
@@ -53,9 +54,11 @@ public class ProducerCacheNonSingletonTest extends ContextTestSupport {
         assertNull("Should not store producer on CamelContext", found);
 
         cache.releaseProducer(endpoint, producer);
-        assertTrue("Should be stopped", producer.getStatus().isStopped());
+        assertTrue("Should still be started", producer.getStatus().isStarted());
 
         cache.stop();
+
+        assertTrue("Should be stopped", producer.getStatus().isStopped());
     }
 
     public class MyDummyComponent extends DefaultComponent {

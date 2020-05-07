@@ -28,7 +28,7 @@ public class IronMQPreserveHeadersTest extends CamelTestSupport {
 
     private IronMQEndpoint endpoint;
 
-    @EndpointInject(uri = "mock:result")
+    @EndpointInject("mock:result")
     private MockEndpoint result;
 
     @Test
@@ -48,6 +48,7 @@ public class IronMQPreserveHeadersTest extends CamelTestSupport {
     protected CamelContext createCamelContext() throws Exception {
         CamelContext context = super.createCamelContext();
         IronMQComponent component = new IronMQComponent(context);
+        component.init();
         endpoint = (IronMQEndpoint)component.createEndpoint("ironmq://TestQueue?projectId=xxx&token=yyy&preserveHeaders=true");
         endpoint.setClient(new IronMQClientMock("dummy", "dummy"));
         context.addComponent("ironmq", component);

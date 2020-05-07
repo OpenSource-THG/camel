@@ -29,7 +29,7 @@ import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.util.StringHelper;
 
 /**
- * The cm-sms component allows to integrate with <a href="https://www.cmtelecom.com/">CM SMS Gateway</a>.
+ * Send SMS messages via <a href="https://www.cmtelecom.com/">CM SMS Gateway</a>.
  */
 @UriEndpoint(firstVersion = "2.18.0", scheme = "cm-sms", title = "CM SMS Gateway", syntax = "cm-sms:host", label = "mobile", producerOnly = true)
 public class CMEndpoint extends DefaultEndpoint {
@@ -38,7 +38,7 @@ public class CMEndpoint extends DefaultEndpoint {
     @Metadata(required = true)
     private String host;
     @UriParam
-    private CMConfiguration configuration;
+    private CMConfiguration configuration = new CMConfiguration();
 
     public CMEndpoint(final String uri, final CMComponent component) {
         super(uri, component);

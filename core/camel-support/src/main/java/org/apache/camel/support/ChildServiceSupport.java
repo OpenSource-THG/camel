@@ -16,113 +16,132 @@
  */
 package org.apache.camel.support;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.Service;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.support.service.ServiceSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class to control lifecycle for a set of child {@link org.apache.camel.Service}s.
  */
 public abstract class ChildServiceSupport extends ServiceSupport {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ChildServiceSupport.class);
+
     protected volatile List<Service> childServices;
 
-    public void start() throws Exception {
+    @Override
+    public void start() {
         synchronized (lock) {
             if (status == STARTED) {
-                log.trace("Service: {} already started", this);
+                LOG.trace("Service: {} already started", this);
                 return;
             }
             if (status == STARTING) {
-                log.trace("Service: {} already starting", this);
+                LOG.trace("Service: {} already starting", this);
                 return;
             }
-            status = STARTING;
-            log.trace("Starting service: {}", this);
             try {
+                ServiceHelper.initService(childServices);
+            } catch (Exception e) {
+                status = FAILED;
+                LOG.trace("Error while initializing service: " + this, e);
+                throw RuntimeCamelException.wrapRuntimeCamelException(e);
+            }
+            try {
+                status = STARTING;
+                LOG.trace("Starting service: {}", this);
                 ServiceHelper.startService(childServices);
                 doStart();
                 status = STARTED;
-                log.trace("Service: {} started", this);
+                LOG.trace("Service: {} started", this);
             } catch (Exception e) {
                 status = FAILED;
-                log.trace("Error while starting service: " + this, e);
+                LOG.trace("Error while starting service: " + this, e);
                 ServiceHelper.stopService(childServices);
-                throw e;
-            }
-        }
-    }
-
-    public void stop() throws Exception {
-        synchronized (lock) {
-            if (status == STOPPED || status == SHUTTINGDOWN || status == SHUTDOWN) {
-                log.trace("Service: {} already stopped", this);
-                return;
-            }
-            if (status == STOPPING) {
-                log.trace("Service: {} already stopping", this);
-                return;
-            }
-            status = STOPPING;
-            log.trace("Stopping service: {}", this);
-            try {
-                doStop();
-                ServiceHelper.stopService(childServices);
-                status = STOPPED;
-                log.trace("Service: {} stopped service", this);
-            } catch (Exception e) {
-                status = FAILED;
-                log.trace("Error while stopping service: " + this, e);
-                throw e;
+                throw RuntimeCamelException.wrapRuntimeCamelException(e);
             }
         }
     }
 
     @Override
-    public void shutdown() throws Exception {
+    public void stop() {
+        synchronized (lock) {
+            if (status == STOPPED || status == SHUTTINGDOWN || status == SHUTDOWN) {
+                LOG.trace("Service: {} already stopped", this);
+                return;
+            }
+            if (status == STOPPING) {
+                LOG.trace("Service: {} already stopping", this);
+                return;
+            }
+            status = STOPPING;
+            LOG.trace("Stopping service: {}", this);
+            try {
+                doStop();
+                ServiceHelper.stopService(childServices);
+                status = STOPPED;
+                LOG.trace("Service: {} stopped service", this);
+            } catch (Exception e) {
+                status = FAILED;
+                LOG.trace("Error while stopping service: " + this, e);
+                throw RuntimeCamelException.wrapRuntimeCamelException(e);
+            }
+        }
+    }
+
+    @Override
+    public void shutdown() {
         synchronized (lock) {
             if (status == SHUTDOWN) {
-                log.trace("Service: {} already shut down", this);
+                LOG.trace("Service: {} already shut down", this);
                 return;
             }
             if (status == SHUTTINGDOWN) {
-                log.trace("Service: {} already shutting down", this);
+                LOG.trace("Service: {} already shutting down", this);
                 return;
             }
             stop();
             status = SHUTDOWN;
-            log.trace("Shutting down service: {}", this);
+            LOG.trace("Shutting down service: {}", this);
             try {
                 doShutdown();
                 ServiceHelper.stopAndShutdownServices(childServices);
-                log.trace("Service: {} shut down", this);
+                LOG.trace("Service: {} shut down", this);
                 status = SHUTDOWN;
             } catch (Exception e) {
                 status = FAILED;
-                log.trace("Error shutting down service: " + this, e);
-                throw e;
+                LOG.trace("Error shutting down service: " + this, e);
+                throw RuntimeCamelException.wrapRuntimeCamelException(e);
             }
         }
     }
 
     protected void addChildService(Object childService) {
         if (childService instanceof Service) {
-            if (childServices == null) {
-                synchronized (lock) {
-                    if (childServices == null) {
-                        childServices = new CopyOnWriteArrayList<>();
-                    }
+            synchronized (lock) {
+                if (childServices == null) {
+                    childServices = new ArrayList<>();
                 }
+                childServices.add((Service) childService);
             }
-            childServices.add((Service) childService);
         }
     }
 
     protected boolean removeChildService(Object childService) {
-        return childServices != null && childServices.remove(childService);
+        if (childService instanceof Service) {
+            synchronized (lock) {
+                if (childServices != null) {
+                    return childServices.remove(childService);
+                }
+            }
+        }
+        return false;
     }
 
 }

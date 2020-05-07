@@ -33,9 +33,10 @@ import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.util.ObjectHelper;
 
 /**
- * The caffeine-cache component is used for integration with Caffeine Cache.
+ * Perform caching operations using Caffeine Cache.
  */
-@UriEndpoint(firstVersion = "2.20.0", scheme = "caffeine-cache", title = "Caffeine Cache", syntax = "caffeine-cache:cacheName", label = "cache,datagrid,clustering")
+@UriEndpoint(firstVersion = "2.20.0", scheme = "caffeine-cache", title = "Caffeine Cache",
+        syntax = "caffeine-cache:cacheName", label = "cache,datagrid,clustering", producerOnly = true)
 public class CaffeineCacheEndpoint extends DefaultEndpoint {
     @UriPath(description = "the cache name")
     @Metadata(required = true)

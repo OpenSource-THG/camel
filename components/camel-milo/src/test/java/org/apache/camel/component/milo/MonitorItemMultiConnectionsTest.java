@@ -34,29 +34,29 @@ public class MonitorItemMultiConnectionsTest extends AbstractMiloServerTest {
 
     private static final String MILO_SERVER_ITEM_1 = "milo-server:myitem1";
 
-    private static final String MILO_CLIENT_ITEM_C1_1 = "milo-client:tcp://foo:bar@localhost:@@port@@?node="
+    private static final String MILO_CLIENT_ITEM_C1_1 = "milo-client:opc.tcp://foo:bar@localhost:@@port@@?node="
                                                         + NodeIds.nodeValue(MiloServerComponent.DEFAULT_NAMESPACE_URI, "items-myitem1") + "&overrideHost=true";
 
-    private static final String MILO_CLIENT_ITEM_C2_1 = "milo-client:tcp://foo:bar2@localhost:@@port@@?node="
+    private static final String MILO_CLIENT_ITEM_C2_1 = "milo-client:opc.tcp://foo:bar2@localhost:@@port@@?node="
                                                         + NodeIds.nodeValue(MiloServerComponent.DEFAULT_NAMESPACE_URI, "items-myitem1") + "&overrideHost=true";
 
-    private static final String MILO_CLIENT_ITEM_C3_1 = "milo-client:tcp://foo2:bar@localhost:@@port@@?node="
+    private static final String MILO_CLIENT_ITEM_C3_1 = "milo-client:opc.tcp://foo2:bar@localhost:@@port@@?node="
                                                         + NodeIds.nodeValue(MiloServerComponent.DEFAULT_NAMESPACE_URI, "items-myitem1") + "&overrideHost=true";
 
     private static final String MOCK_TEST_1 = "mock:test1";
     private static final String MOCK_TEST_2 = "mock:test2";
     private static final String MOCK_TEST_3 = "mock:test3";
 
-    @EndpointInject(uri = MOCK_TEST_1)
+    @EndpointInject(MOCK_TEST_1)
     protected MockEndpoint test1Endpoint;
 
-    @EndpointInject(uri = MOCK_TEST_2)
+    @EndpointInject(MOCK_TEST_2)
     protected MockEndpoint test2Endpoint;
 
-    @EndpointInject(uri = MOCK_TEST_3)
+    @EndpointInject(MOCK_TEST_3)
     protected MockEndpoint test3Endpoint;
 
-    @Produce(uri = DIRECT_START_1)
+    @Produce(DIRECT_START_1)
     protected ProducerTemplate producer1;
 
     @Override
