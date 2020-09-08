@@ -503,7 +503,7 @@
         <solr-version-range>[8,9)</solr-version-range>
         <spark-version>2.4.5</spark-version>
         <splunk-version>1.6.5.0_1</splunk-version>
-        <spring-batch-version>4.2.1.RELEASE</spring-batch-version>
+        <spring-batch-version>4.2.3.RELEASE</spring-batch-version>
         <spring-boot-version>2.2.6.RELEASE</spring-boot-version>
         <spring-data-redis-version>2.2.4.RELEASE</spring-data-redis-version>
         <spring-integration-version>5.2.5.RELEASE</spring-integration-version>
@@ -577,8 +577,8 @@
         <camel.osgi.import.default.version>[$(version;==;$(@)),$(version;+;$(@)))</camel.osgi.import.default.version>
         <camel.osgi.import.defaults>
         </camel.osgi.import.defaults>
-        <camel.osgi.import.before.defaults />
-        <camel.osgi.import.additional />
+        <camel.osgi.import.before.defaults/>
+        <camel.osgi.import.additional/>
         <camel.osgi.import.pkg>
             org.apache.camel.*;${camel.osgi.import.camel.version},
             ${camel.osgi.import.before.defaults},
@@ -586,18 +586,18 @@
             ${camel.osgi.import.additional},
             *
         </camel.osgi.import.pkg>
-        <camel.osgi.activator />
+        <camel.osgi.activator/>
         <camel.osgi.failok>false</camel.osgi.failok>
         <camel.osgi.private.pkg>!*</camel.osgi.private.pkg>
         <camel.osgi.export.pkg>$${replace;{local-packages};;;\;}</camel.osgi.export.pkg>
         <camel.osgi.export>${camel.osgi.export.pkg};-noimport:=true;${camel.osgi.version}</camel.osgi.export>
         <camel.osgi.version>version=${project.version}</camel.osgi.version>
         <camel.osgi.import>${camel.osgi.import.pkg}</camel.osgi.import>
-        <camel.osgi.dynamic />
+        <camel.osgi.dynamic/>
         <camel.osgi.symbolic.name>${project.groupId}.${project.artifactId}</camel.osgi.symbolic.name>
         <camel.osgi.exclude.dependencies>false</camel.osgi.exclude.dependencies>
-        <camel.osgi.require.capability />
-        <camel.osgi.provide.capability />
+        <camel.osgi.require.capability/>
+        <camel.osgi.provide.capability/>
 
         <camel.osgi.manifest>${project.build.outputDirectory}/META-INF/MANIFEST.MF</camel.osgi.manifest>
     </properties>
@@ -4149,7 +4149,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore />
+                                        <ignore/>
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
@@ -4171,7 +4171,7 @@
                 <executions>
                     <execution>
                         <id>attach-descriptor</id>
-                        <phase />
+                        <phase/>
                     </execution>
                 </executions>
             </plugin>
@@ -4182,7 +4182,7 @@
                 <executions>
                     <execution>
                         <id>enforce-maven-version</id>
-                        <phase />
+                        <phase/>
                     </execution>
                 </executions>
             </plugin>
